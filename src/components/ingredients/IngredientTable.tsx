@@ -22,14 +22,14 @@ function ActionLinks({
       <button
         onClick={() => onEdit(ingredient)}
         className="font-mono-label min-h-11 text-[10px] hover:underline"
-        style={{ color: 'var(--gold)' }}
+        style={{ color: 'var(--accent)' }}
       >
         修改
       </button>
       <button
         onClick={() => onDelete(ingredient)}
         className="font-mono-label min-h-11 text-[10px] hover:underline"
-        style={{ color: 'var(--wine)' }}
+        style={{ color: 'var(--danger)' }}
       >
         刪除
       </button>

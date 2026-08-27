@@ -109,7 +109,7 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
       }
     >
       {errorMessage && (
-        <p className="mb-6 border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--wine)', color: 'var(--muted)' }}>
+        <p className="mb-6 border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--danger)', color: 'var(--muted)' }}>
           {errorMessage}
         </p>
       )}
@@ -133,8 +133,8 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
             onClick={() => setCategoryTab(tab.value)}
             className="font-mono-label -mb-px flex min-h-11 shrink-0 items-center border-b-2 text-[10px]"
             style={{
-              borderColor: categoryTab === tab.value ? 'var(--wine)' : 'transparent',
-              color: categoryTab === tab.value ? 'var(--wine)' : 'var(--faint)',
+              borderColor: categoryTab === tab.value ? 'var(--accent)' : 'transparent',
+              color: categoryTab === tab.value ? 'var(--accent)' : 'var(--faint)',
             }}
           >
             {tab.label}

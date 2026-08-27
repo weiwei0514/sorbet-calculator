@@ -23,7 +23,7 @@ export function RangeBar({ label, actual, target, range, axisMax }: RangeBarProp
         <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
           {label}
         </span>
-        <span className="tabular text-sm" style={{ color: isOff ? 'var(--gold)' : 'var(--muted)' }}>
+        <span className="tabular text-sm" style={{ color: isOff ? 'var(--accent)' : 'var(--muted)' }}>
           {fmt(actual)}% <span style={{ color: 'var(--faint)' }}>／目標 {fmt(target)}%</span>
         </span>
       </div>
@@ -34,7 +34,7 @@ export function RangeBar({ label, actual, target, range, axisMax }: RangeBarProp
             style={{
               left: `${pct(range[0])}%`,
               width: `${pct(range[1]) - pct(range[0])}%`,
-              background: 'color-mix(in oklab, var(--wine) 18%, transparent)',
+              background: 'color-mix(in oklab, var(--accent) 18%, transparent)',
             }}
           />
         )}
@@ -42,7 +42,7 @@ export function RangeBar({ label, actual, target, range, axisMax }: RangeBarProp
           className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full"
           style={{
             left: `calc(${pct(actual)}% - 6px)`,
-            background: 'var(--wine)',
+            background: 'var(--accent)',
             // surface ring so the marker stays legible against the tinted band
             boxShadow: '0 0 0 2px var(--surface)',
           }}

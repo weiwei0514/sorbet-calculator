@@ -10,6 +10,8 @@ const strawberry: Ingredient = {
   sugarPct: 9,
   otherSolidsPct: 4,
   totalSolidsPct: 13,
+  recommendedMinPct: 35,
+  recommendedMaxPct: 60,
 }
 
 const glucosePowder: Ingredient = {
@@ -20,6 +22,8 @@ const glucosePowder: Ingredient = {
   sugarPct: 81,
   otherSolidsPct: 0,
   totalSolidsPct: 81,
+  recommendedMinPct: null,
+  recommendedMaxPct: null,
 }
 
 const baseInputs: RecipeInputs = {

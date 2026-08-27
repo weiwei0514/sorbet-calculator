@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #faf6ee;
-  --surface: #fffdf8;
+  --bg: #ffffff;
+  --surface: #ffffff;
   --ink: #211c1a;
   --muted: rgba(33, 28, 26, 0.6);
   --faint: rgba(33, 28, 26, 0.38);
   --rule: rgba(33, 28, 26, 0.12);
   --wine: #7a1f3d;
   --wine-deep: #591530;
-  --gold: #b8874f;
-  --sorbet-pink: #e7c9c9;
+  /* Secondary/interactive color — buttons, links, active states, form accents.
+     Low-saturation blue (OKLCH C≈0.07), contrast 5.4:1 on white. */
+  --accent: #4a6d94;
+  --accent-deep: #35516f;
+  /* Text/icon color placed ON TOP of a solid --accent fill (e.g. button label). */
+  --on-accent: #ffffff;
+  /* Destructive/error — kept distinct from --accent so delete/errors never read as "just another button". */
+  --danger: #a13b3b;
 
   /* Categorical series colors — validated for CVD-safety with
      scripts/validate_palette.js (dataviz skill), adjacent pairs, light+dark. */
@@ -42,7 +48,10 @@
     --rule: rgba(242, 236, 226, 0.14);
     --wine: #d98aa3;
     --wine-deep: #f0a8bd;
-    --gold: #d3a86a;
+    --accent: #8fadd1;
+    --accent-deep: #b4cbe6;
+    --on-accent: #17130f;
+    --danger: #c96b6b;
 
     --series-fruit: #c33a8f;
     --series-other-sugar: #c8691f;

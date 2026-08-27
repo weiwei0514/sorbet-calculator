@@ -1,8 +1,11 @@
 -- ============================================================
 -- Sorbet Calculator — Supabase Schema
 -- Run this whole file once in the Supabase SQL Editor for a
--- fresh project. No migration framework — this is the single
--- source of truth for the schema.
+-- fresh project. No migration framework for the base schema —
+-- this is the source of truth for a new setup. Incremental
+-- changes to an already-provisioned project live in
+-- supabase/migrations/ instead (run those in order afterwards
+-- only if this file's history predates them).
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS ingredients (
@@ -14,6 +17,10 @@ CREATE TABLE IF NOT EXISTS ingredients (
   sugar_pct NUMERIC(5,2) NOT NULL CHECK (sugar_pct >= 0 AND sugar_pct <= 100),
   other_solids_pct NUMERIC(5,2) NOT NULL CHECK (other_solids_pct >= 0 AND other_solids_pct <= 100),
   total_solids_pct NUMERIC(5,2) GENERATED ALWAYS AS (sugar_pct + other_solids_pct) STORED,
+  -- Reference-book suggested fruit% range for this ingredient (informational hint only,
+  -- does not affect the app's hard 25–60% validation). NULL when unknown.
+  recommended_min_pct NUMERIC(5,2),
+  recommended_max_pct NUMERIC(5,2),
   CONSTRAINT composition_sums_to_100
     CHECK (ABS(water_pct + sugar_pct + other_solids_pct - 100) <= 0.05),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -49,20 +56,39 @@ CREATE POLICY "anon_full_access_ingredients"
   WITH CHECK (true);
 
 -- ============================================================
--- Seed data — best-effort approximate compositions for common
--- sorbet fruits. All editable afterwards via the app's 食材資料庫 UI.
+-- Seed data. Fruit compositions and recommended ranges sourced from
+-- a pastry/gelato reference book (附表1 材料成分比例參考、附表2 水果成分
+-- 參考、附表3 Sorbet 中水果的建議添加值) where available; otherwise
+-- best-effort approximates. All editable afterwards via 食材資料庫 UI.
 -- ============================================================
-INSERT INTO ingredients (name, category, water_pct, sugar_pct, other_solids_pct) VALUES
-  ('草莓',   'fruit', 87, 9,  4),
-  ('桃子',   'fruit', 88, 9,  3),
-  ('芒果',   'fruit', 82, 15, 3),
-  ('香蕉',   'fruit', 74, 21, 5),
-  ('鳳梨',   'fruit', 85, 12, 3),
-  ('百香果', 'fruit', 82, 11, 7),
-  ('覆盆子', 'fruit', 85, 8,  7),
-  ('藍莓',   'fruit', 84, 12, 4),
-  ('柚子',   'fruit', 89, 8,  3),
-  ('檸檬',   'fruit', 90, 5,  5),
-  ('柳橙',   'fruit', 87, 10, 3),
-  ('葡萄糖粉', 'other_sugar', 19, 81, 0)
+INSERT INTO ingredients (name, category, water_pct, sugar_pct, other_solids_pct, recommended_min_pct, recommended_max_pct) VALUES
+  ('草莓',   'fruit', 87, 9,  4,  35,   60),
+  ('桃子',   'fruit', 83, 8,  9,  50,   60),
+  ('芒果',   'fruit', 82, 15, 3,  40,   60),
+  ('香蕉',   'fruit', 77, 15, 8,  50,   60),
+  ('鳳梨',   'fruit', 79, 12, 9,  45,   60),
+  ('百香果', 'fruit', 82, 11, 7,  30,   45),
+  ('覆盆子', 'fruit', 83, 14, 3,  45,   55),
+  ('藍莓',   'fruit', 84, 12, 4,  45,   55),
+  ('柚子',   'fruit', 89, 8,  3,  NULL, NULL),
+  ('檸檬',   'fruit', 90, 9,  1,  25,   35),
+  ('柳橙',   'fruit', 87, 10, 3,  NULL, NULL),
+  ('橘子',   'fruit', 84, 8,  8,  55,   60),
+  ('小橘子', 'fruit', 80, 12, 8,  45,   55),
+  ('西洋梨', 'fruit', 85, 9,  6,  50,   60),
+  ('奇異果', 'fruit', 88, 9,  3,  40,   60),
+  ('葡萄柚', 'fruit', 87, 7,  6,  35,   50),
+  ('哈密瓜', 'fruit', 87, 8,  5,  40,   60),
+  ('西瓜',   'fruit', 89, 6,  5,  NULL, NULL),
+  ('櫻桃',   'fruit', 84, 10, 6,  NULL, NULL),
+  ('無花果', 'fruit', 85, 8,  7,  NULL, NULL),
+  ('蘋果',   'fruit', 81, 13, 6,  NULL, NULL),
+  ('葡萄',   'fruit', 81, 14, 5,  NULL, NULL),
+  ('芭樂',   'fruit', 78, 7,  15, NULL, NULL),
+  ('火龍果', 'fruit', 74, 11, 15, NULL, NULL),
+  ('葡萄糖粉', 'other_sugar', 19, 81, 0, NULL, NULL),
+  ('右旋糖粉', 'other_sugar', 5,  95, 0, NULL, NULL),
+  ('海藻糖',   'other_sugar', 10, 90, 0, NULL, NULL),
+  ('轉化糖',   'other_sugar', 25, 75, 0, NULL, NULL),
+  ('麥芽糊精', 'other_sugar', 4,  96, 0, NULL, NULL)
 ON CONFLICT DO NOTHING;

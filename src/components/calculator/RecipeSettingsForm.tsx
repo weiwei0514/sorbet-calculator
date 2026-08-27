@@ -48,6 +48,9 @@ function SelectField({
 }
 
 export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: RecipeSettingsFormProps) {
+  const selectedFruit = fruits.find((f) => f.id === inputs.fruitIngredientId)
+  const hasRecommendedRange = selectedFruit?.recommendedMinPct != null && selectedFruit?.recommendedMaxPct != null
+
   return (
     <Section eyebrow="Recipe Setup" title="配方設定">
       <div className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
@@ -68,13 +71,20 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           emptyLabel="尚無水果資料"
         />
 
-        <PercentField
-          label="水果比例"
-          value={inputs.fruitPct}
-          onChange={(v) => onChange({ fruitPct: v })}
-          min={25}
-          max={60}
-        />
+        <div className="flex flex-col gap-2">
+          <PercentField
+            label="水果比例"
+            value={inputs.fruitPct}
+            onChange={(v) => onChange({ fruitPct: v })}
+            min={25}
+            max={60}
+          />
+          {hasRecommendedRange && (
+            <span className="text-xs" style={{ color: 'var(--accent)' }}>
+              參考書建議：{selectedFruit!.recommendedMinPct}%–{selectedFruit!.recommendedMaxPct}%
+            </span>
+          )}
+        </div>
 
         <PercentField
           label="目標總固形物"

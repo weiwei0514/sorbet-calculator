@@ -8,6 +8,8 @@ export interface IngredientRow {
   sugar_pct: number
   other_solids_pct: number
   total_solids_pct: number
+  recommended_min_pct: number | null
+  recommended_max_pct: number | null
 }
 
 export function rowToIngredient(row: IngredientRow): Ingredient {
@@ -19,5 +21,7 @@ export function rowToIngredient(row: IngredientRow): Ingredient {
     sugarPct: Number(row.sugar_pct),
     otherSolidsPct: Number(row.other_solids_pct),
     totalSolidsPct: Number(row.total_solids_pct),
+    recommendedMinPct: row.recommended_min_pct == null ? null : Number(row.recommended_min_pct),
+    recommendedMaxPct: row.recommended_max_pct == null ? null : Number(row.recommended_max_pct),
   }
 }

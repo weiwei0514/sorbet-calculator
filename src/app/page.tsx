@@ -31,7 +31,7 @@ export default async function Home() {
         <h1 className="font-display text-3xl font-medium sm:text-4xl" style={{ color: 'var(--wine)' }}>
           Sorbet 配方自動計算器
         </h1>
-        <p className="border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--wine)', color: 'var(--muted)' }}>
+        <p className="border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--danger)', color: 'var(--muted)' }}>
           {loadError}
         </p>
       </div>

@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# personal reference material (e.g. photographed book pages) — not for source control
+/reference
+
 # debug
 npm-debug.log*
 yarn-debug.log*

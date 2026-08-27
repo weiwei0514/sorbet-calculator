@@ -73,7 +73,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10 sm:gap-14 sm:px-6 sm:py-16 lg:px-10">
       <header className="border-b pb-6 sm:pb-8" style={{ borderColor: 'var(--wine)' }}>
-        <p className="font-mono-label mb-3 text-[10px] sm:mb-4" style={{ color: 'var(--gold)' }}>
+        <p className="font-mono-label mb-3 text-[10px] sm:mb-4" style={{ color: 'var(--accent)' }}>
           Sorbet Recipe Engine
         </p>
         <h1
@@ -88,7 +88,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
       </header>
 
       {isDemo && (
-        <p className="border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--gold)', color: 'var(--muted)' }}>
+        <p className="border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--accent)', color: 'var(--muted)' }}>
           目前顯示的是內建示範食材資料（尚未連接 Supabase），計算功能可正常使用，但食材資料庫的新增/修改/刪除不會被儲存。請依 README
           設定 Supabase 後即可持久保存食材資料。
         </p>

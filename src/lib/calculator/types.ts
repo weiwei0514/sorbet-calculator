@@ -8,11 +8,15 @@ export interface Ingredient {
   sugarPct: number
   otherSolidsPct: number
   totalSolidsPct: number
+  /** Reference-book suggested fruit% range for this ingredient in a sorbet recipe.
+   *  Informational only — the 25–60% hard limit in validate.ts is unaffected. Null when unknown. */
+  recommendedMinPct: number | null
+  recommendedMaxPct: number | null
 }
 
 export type IngredientInput = Pick<
   Ingredient,
-  'name' | 'category' | 'waterPct' | 'sugarPct' | 'otherSolidsPct'
+  'name' | 'category' | 'waterPct' | 'sugarPct' | 'otherSolidsPct' | 'recommendedMinPct' | 'recommendedMaxPct'
 >
 
 /** Composition of any component, expressed per 100 units of its own weight. */

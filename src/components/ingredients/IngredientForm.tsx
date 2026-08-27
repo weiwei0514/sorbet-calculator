@@ -32,6 +32,8 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
   const [waterPct, setWaterPct] = useState(initial?.waterPct ?? 0)
   const [sugarPct, setSugarPct] = useState(initial?.sugarPct ?? 0)
   const [otherSolidsPct, setOtherSolidsPct] = useState(initial?.otherSolidsPct ?? 0)
+  const [recommendedMinPct, setRecommendedMinPct] = useState(initial?.recommendedMinPct?.toString() ?? '')
+  const [recommendedMaxPct, setRecommendedMaxPct] = useState(initial?.recommendedMaxPct?.toString() ?? '')
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [submitting, setSubmitting] = useState(false)
 
@@ -39,7 +41,15 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const input: IngredientInput = { name, category, waterPct, sugarPct, otherSolidsPct }
+    const input: IngredientInput = {
+      name,
+      category,
+      waterPct,
+      sugarPct,
+      otherSolidsPct,
+      recommendedMinPct: recommendedMinPct.trim() === '' ? null : Number(recommendedMinPct),
+      recommendedMaxPct: recommendedMaxPct.trim() === '' ? null : Number(recommendedMaxPct),
+    }
     const validationErrors = validateIngredientComposition(input)
     if (!name.trim()) {
       validationErrors.push({ field: 'name', code: 'REQUIRED', message: '請輸入食材名稱' })
@@ -61,7 +71,7 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
     <form
       onSubmit={handleSubmit}
       className="flex flex-col gap-6 border-l-2 py-2 pl-6"
-      style={{ borderColor: 'var(--gold)' }}
+      style={{ borderColor: 'var(--accent)' }}
     >
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
         <label className="flex flex-col gap-2 sm:col-span-2">
@@ -125,14 +135,42 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
 
         <div className="flex flex-col gap-2">
           <FieldLabel>總固形物 %（自動）</FieldLabel>
-          <div className="tabular border-b pb-1.5 text-base" style={{ borderColor: 'var(--rule)', color: 'var(--gold)' }}>
+          <div className="tabular border-b pb-1.5 text-base" style={{ borderColor: 'var(--rule)', color: 'var(--accent)' }}>
             {totalSolidsPct.toFixed(1)}
           </div>
         </div>
+
+        {category === 'fruit' && (
+          <>
+            <label className="flex flex-col gap-2">
+              <FieldLabel>建議添加比例下限 %（選填）</FieldLabel>
+              <input
+                type="number"
+                step={1}
+                value={recommendedMinPct}
+                onChange={(e) => setRecommendedMinPct(e.target.value)}
+                style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+                className={`tabular ${inputClass}`}
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <FieldLabel>建議添加比例上限 %（選填）</FieldLabel>
+              <input
+                type="number"
+                step={1}
+                value={recommendedMaxPct}
+                onChange={(e) => setRecommendedMaxPct(e.target.value)}
+                style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+                className={`tabular ${inputClass}`}
+              />
+            </label>
+          </>
+        )}
       </div>
 
       {errors.length > 0 && (
-        <ul className="space-y-1 text-sm" style={{ color: 'var(--wine)' }}>
+        <ul className="space-y-1 text-sm" style={{ color: 'var(--danger)' }}>
           {errors.map((err, i) => (
             <li key={i}>{err.message}</li>
           ))}

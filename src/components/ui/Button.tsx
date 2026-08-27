@@ -10,9 +10,9 @@ const BASE =
 export function Button({ variant = 'solid', className = '', style, ...props }: ButtonProps) {
   const variantStyle =
     variant === 'solid'
-      ? { background: 'var(--wine)', color: 'var(--surface)' }
+      ? { background: 'var(--accent)', color: 'var(--on-accent)' }
       : variant === 'outline'
-        ? { background: 'transparent', color: 'var(--wine)', border: '1px solid var(--wine)' }
+        ? { background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }
         : { background: 'transparent', color: 'var(--muted)' }
 
   return <button className={`${BASE} ${className}`} style={{ ...variantStyle, ...style }} {...props} />
