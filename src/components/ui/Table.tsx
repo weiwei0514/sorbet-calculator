@@ -35,7 +35,7 @@ export function TR({
 export function TH({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <th
-      className={`font-mono-label border-b py-3 pr-4 text-left text-[10px] font-normal ${className}`}
+      className={`font-mono-label border-b py-3 pr-2 text-left text-[10px] font-normal sm:pr-4 ${className}`}
       style={{ borderColor: 'var(--ink)', color: 'var(--faint)' }}
     >
       {children}
@@ -53,7 +53,7 @@ export function TD({
   style?: CSSProperties
 }) {
   return (
-    <td className={`py-3 pr-4 ${className}`} style={{ color: 'var(--ink)', ...style }}>
+    <td className={`py-3 pr-2 sm:pr-4 ${className}`} style={{ color: 'var(--ink)', ...style }}>
       {children}
     </td>
   )

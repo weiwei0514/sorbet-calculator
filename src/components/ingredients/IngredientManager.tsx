@@ -98,9 +98,13 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
       eyebrow="Ingredient Database"
       title="食材資料庫"
       action={
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <IngredientSearchBar value={search} onChange={setSearch} />
-          {!adding && !editing && <Button onClick={() => setAdding(true)}>新增食材</Button>}
+          {!adding && !editing && (
+            <Button className="w-full sm:w-auto" onClick={() => setAdding(true)}>
+              新增食材
+            </Button>
+          )}
         </div>
       }
     >
@@ -122,12 +126,12 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
         </div>
       )}
 
-      <div className="mb-6 flex gap-6 border-b" style={{ borderColor: 'var(--rule)' }}>
+      <div className="mb-6 flex gap-6 overflow-x-auto border-b" style={{ borderColor: 'var(--rule)' }}>
         {CATEGORY_TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setCategoryTab(tab.value)}
-            className="font-mono-label -mb-px border-b-2 pb-3 text-[10px]"
+            className="font-mono-label -mb-px flex min-h-11 shrink-0 items-center border-b-2 text-[10px]"
             style={{
               borderColor: categoryTab === tab.value ? 'var(--wine)' : 'transparent',
               color: categoryTab === tab.value ? 'var(--wine)' : 'var(--faint)',

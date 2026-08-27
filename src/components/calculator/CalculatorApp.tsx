@@ -71,15 +71,18 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
   }, [effectiveInputs, selectedFruit, selectedOtherSugar])
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-14 px-6 py-16 sm:px-10">
-      <header className="border-b pb-8" style={{ borderColor: 'var(--wine)' }}>
-        <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--gold)' }}>
+    <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10 sm:gap-14 sm:px-6 sm:py-16 lg:px-10">
+      <header className="border-b pb-6 sm:pb-8" style={{ borderColor: 'var(--wine)' }}>
+        <p className="font-mono-label mb-3 text-[10px] sm:mb-4" style={{ color: 'var(--gold)' }}>
           Sorbet Recipe Engine
         </p>
-        <h1 className="font-display text-5xl leading-none font-medium sm:text-6xl" style={{ color: 'var(--wine)' }}>
+        <h1
+          className="font-display text-4xl leading-none font-medium sm:text-5xl lg:text-6xl"
+          style={{ color: 'var(--wine)' }}
+        >
           配方自動計算器
         </h1>
-        <p className="font-display mt-4 text-lg italic" style={{ color: 'var(--muted)' }}>
+        <p className="font-display mt-3 text-base italic sm:mt-4 sm:text-lg" style={{ color: 'var(--muted)' }}>
           依水果比例、目標總固形物、膠體與其他糖類，自動反推完整配方。
         </p>
       </header>
@@ -91,7 +94,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
         </p>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-x-12 gap-y-14 lg:grid-cols-[360px_1fr]">
+      <div className="grid grid-cols-1 items-start gap-x-12 gap-y-10 sm:gap-y-14 lg:grid-cols-[360px_1fr]">
         <div className="lg:sticky lg:top-10">
           <RecipeSettingsForm
             inputs={effectiveInputs}
@@ -101,7 +104,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
           />
         </div>
 
-        <div className="flex flex-col gap-14">
+        <div className="flex flex-col gap-10 sm:gap-14">
           {!outcome.ok && <ErrorBanner errors={outcome.errors} />}
 
           {outcome.ok && (

@@ -8,6 +8,13 @@ function fmt(n: number) {
   return n.toLocaleString('zh-TW', { maximumFractionDigits: 1, minimumFractionDigits: 1 })
 }
 
+// The composition bar's legend above already conveys the role (fruit/other sugar) via
+// color + swatch label, so the table row can drop the "水果："/"其他糖類：" prefix and
+// stay compact on narrow screens.
+function shortLabel(label: string) {
+  return label.replace(/^水果：|^其他糖類：/, '')
+}
+
 export function ComputedRecipeTable({
   components,
   totals,
@@ -38,7 +45,7 @@ export function ComputedRecipeTable({
                     className="inline-block h-2 w-2 shrink-0 rounded-full"
                     style={{ background: componentColor(c.key) }}
                   />
-                  {c.label}
+                  {shortLabel(c.label)}
                 </span>
               </TD>
               <TD className="tabular text-right">{fmt(c.weightG)} g</TD>
