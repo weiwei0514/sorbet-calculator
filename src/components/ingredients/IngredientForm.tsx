@@ -34,6 +34,8 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
   const [otherSolidsPct, setOtherSolidsPct] = useState(initial?.otherSolidsPct ?? 0)
   const [recommendedMinPct, setRecommendedMinPct] = useState(initial?.recommendedMinPct?.toString() ?? '')
   const [recommendedMaxPct, setRecommendedMaxPct] = useState(initial?.recommendedMaxPct?.toString() ?? '')
+  const [podCoefficient, setPodCoefficient] = useState(initial?.podCoefficient?.toString() ?? '')
+  const [pacCoefficient, setPacCoefficient] = useState(initial?.pacCoefficient?.toString() ?? '')
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [submitting, setSubmitting] = useState(false)
 
@@ -49,6 +51,8 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
       otherSolidsPct,
       recommendedMinPct: recommendedMinPct.trim() === '' ? null : Number(recommendedMinPct),
       recommendedMaxPct: recommendedMaxPct.trim() === '' ? null : Number(recommendedMaxPct),
+      podCoefficient: podCoefficient.trim() === '' ? null : Number(podCoefficient),
+      pacCoefficient: pacCoefficient.trim() === '' ? null : Number(pacCoefficient),
     }
     const validationErrors = validateIngredientComposition(input)
     if (!name.trim()) {
@@ -139,6 +143,38 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
             {totalSolidsPct.toFixed(1)}
           </div>
         </div>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>POD 係數（選填）</FieldLabel>
+          <input
+            type="number"
+            step={0.01}
+            value={podCoefficient}
+            onChange={(e) => setPodCoefficient(e.target.value)}
+            placeholder="例如 0.45"
+            style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+            className={`tabular ${inputClass}`}
+          />
+          <span className="text-xs" style={{ color: 'var(--faint)' }}>
+            請輸入小數（例如 0.45），不是百分比；蔗糖基準為 1.00
+          </span>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>PAC 係數（選填）</FieldLabel>
+          <input
+            type="number"
+            step={0.01}
+            value={pacCoefficient}
+            onChange={(e) => setPacCoefficient(e.target.value)}
+            placeholder="例如 0.45"
+            style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+            className={`tabular ${inputClass}`}
+          />
+          <span className="text-xs" style={{ color: 'var(--faint)' }}>
+            請輸入小數（例如 0.45），不是百分比；蔗糖基準為 1.00
+          </span>
+        </label>
 
         {category === 'fruit' && (
           <>

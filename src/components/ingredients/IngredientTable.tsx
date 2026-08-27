@@ -37,6 +37,10 @@ function ActionLinks({
   )
 }
 
+function fmtNullable(v: number | null) {
+  return v == null ? '—' : v.toFixed(2)
+}
+
 function StatPair({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -70,11 +74,13 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
               <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
             </div>
             <IngredientCompositionBar ingredient={ing} />
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <StatPair label="水分%" value={ing.waterPct.toFixed(1)} />
               <StatPair label="糖分%" value={ing.sugarPct.toFixed(1)} />
               <StatPair label="其他固形物%" value={ing.otherSolidsPct.toFixed(1)} />
               <StatPair label="總固形物%" value={ing.totalSolidsPct.toFixed(1)} />
+              <StatPair label="POD" value={fmtNullable(ing.podCoefficient)} />
+              <StatPair label="PAC" value={fmtNullable(ing.pacCoefficient)} />
             </div>
           </li>
         ))}
@@ -91,6 +97,8 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
               <TH className="text-right">糖分%</TH>
               <TH className="text-right">其他固形物%</TH>
               <TH className="text-right">總固形物%</TH>
+              <TH className="text-right">POD</TH>
+              <TH className="text-right">PAC</TH>
               <TH className="text-right">操作</TH>
             </TR>
           </THead>
@@ -105,6 +113,8 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
                 <TD className="tabular text-right">{ing.sugarPct.toFixed(1)}</TD>
                 <TD className="tabular text-right">{ing.otherSolidsPct.toFixed(1)}</TD>
                 <TD className="tabular text-right">{ing.totalSolidsPct.toFixed(1)}</TD>
+                <TD className="tabular text-right">{fmtNullable(ing.podCoefficient)}</TD>
+                <TD className="tabular text-right">{fmtNullable(ing.pacCoefficient)}</TD>
                 <TD className="text-right">
                   <div className="flex justify-end">
                     <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />

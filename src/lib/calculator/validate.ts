@@ -57,6 +57,8 @@ export function validateIngredientComposition(ing: {
   waterPct: number
   sugarPct: number
   otherSolidsPct: number
+  podCoefficient?: number | null
+  pacCoefficient?: number | null
 }): ValidationError[] {
   const errors: ValidationError[] = []
 
@@ -78,6 +80,13 @@ export function validateIngredientComposition(ing: {
       code: 'COMPOSITION_NOT_100',
       message: `水分% + 糖分% + 其他固形物% 總和需等於 100%（目前為 ${sum.toFixed(2)}%）`,
     })
+  }
+
+  if (ing.podCoefficient != null && ing.podCoefficient < 0) {
+    errors.push({ field: 'podCoefficient', code: 'OUT_OF_RANGE', message: 'POD 係數不可為負數' })
+  }
+  if (ing.pacCoefficient != null && ing.pacCoefficient < 0) {
+    errors.push({ field: 'pacCoefficient', code: 'OUT_OF_RANGE', message: 'PAC 係數不可為負數' })
   }
 
   return errors

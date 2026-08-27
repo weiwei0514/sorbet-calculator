@@ -12,6 +12,8 @@ const strawberry: Ingredient = {
   totalSolidsPct: 13,
   recommendedMinPct: 35,
   recommendedMaxPct: 60,
+  podCoefficient: null,
+  pacCoefficient: null,
 }
 
 const glucosePowder: Ingredient = {
@@ -24,6 +26,23 @@ const glucosePowder: Ingredient = {
   totalSolidsPct: 81,
   recommendedMinPct: null,
   recommendedMaxPct: null,
+  podCoefficient: null,
+  pacCoefficient: null,
+}
+
+// Matches the spec's own worked example exactly: 100% sugar, POD=PAC=0.45.
+const trehalose: Ingredient = {
+  id: 'trehalose',
+  name: '海藻糖',
+  category: 'other_sugar',
+  waterPct: 0,
+  sugarPct: 100,
+  otherSolidsPct: 0,
+  totalSolidsPct: 100,
+  recommendedMinPct: null,
+  recommendedMaxPct: null,
+  podCoefficient: 0.45,
+  pacCoefficient: 0.45,
 }
 
 const baseInputs: RecipeInputs = {
@@ -34,6 +53,8 @@ const baseInputs: RecipeInputs = {
   stabilizerPct: 0.5,
   otherSugarIngredientId: glucosePowder.id,
   otherSugarPct: 3,
+  targetPOD: null,
+  targetPAC: null,
 }
 
 function run(inputs: Partial<RecipeInputs> = {}, fruit = strawberry, otherSugar = glucosePowder) {
@@ -107,5 +128,51 @@ describe('calculateRecipe — spec worked example', () => {
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
     expect(outcome.errors.some((e) => e.code === 'COMPOSITION_NOT_100')).toBe(true)
+  })
+})
+
+describe('calculateRecipe — POD/PAC', () => {
+  it('sucrose contributes POD/PAC at its 1.00 baseline, coefficient never divided by 100', () => {
+    const outcome = run()
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+
+    const sucrose = outcome.result.components.find((c) => c.key === 'sucrose')!
+    // sucrose weight is 218.7g at 100% sugar, coefficient 1.00 -> contribution should be 218.7, not 2.187 or 21870.
+    expect(sucrose.podContributionG).toBeCloseTo(218.7, 6)
+    expect(sucrose.pacContributionG).toBeCloseTo(218.7, 6)
+  })
+
+  it('海藻糖 100g at POD/PAC 0.45 contributes exactly 45, matching the spec example', () => {
+    // 2000g total, 5% other-sugar -> exactly 100g of trehalose.
+    const outcome = run({ totalWeightG: 2000, otherSugarPct: 5 }, strawberry, trehalose)
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+
+    const otherSugar = outcome.result.components.find((c) => c.key === 'otherSugar')!
+    expect(otherSugar.weightG).toBeCloseTo(100, 6)
+    expect(otherSugar.podContributionG).toBeCloseTo(45, 6)
+    expect(otherSugar.pacContributionG).toBeCloseTo(45, 6)
+  })
+
+  it('gap = target - actual, positive when actual is below target (per spec: 目前13.5/目標15/差距+1.5)', () => {
+    const outcome = run({ targetPOD: 220, targetPAC: 220 })
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+
+    expect(outcome.result.podTarget).not.toBeNull()
+    const gap = outcome.result.podTarget!.gap
+    expect(gap).toBeCloseTo(220 - outcome.result.totals.totalPOD, 6)
+  })
+
+  it('returns null targets when not set, and lists ingredients missing coefficients without throwing', () => {
+    const outcome = run()
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+
+    expect(outcome.result.podTarget).toBeNull()
+    expect(outcome.result.pacTarget).toBeNull()
+    expect(outcome.result.missingCoefficientIngredientNames).toContain('草莓')
+    expect(outcome.result.missingCoefficientIngredientNames).toContain('葡萄糖粉')
   })
 })

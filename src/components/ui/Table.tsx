@@ -47,13 +47,15 @@ export function TD({
   children,
   className = '',
   style,
+  colSpan,
 }: {
   children: ReactNode
   className?: string
   style?: CSSProperties
+  colSpan?: number
 }) {
   return (
-    <td className={`py-3 pr-2 sm:pr-4 ${className}`} style={{ color: 'var(--ink)', ...style }}>
+    <td className={`py-3 pr-2 sm:pr-4 ${className}`} style={{ color: 'var(--ink)', ...style }} colSpan={colSpan}>
       {children}
     </td>
   )

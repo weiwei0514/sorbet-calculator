@@ -6,6 +6,7 @@ import { calculateRecipe } from '@/lib/calculator/engine'
 import { RecipeSettingsForm } from './RecipeSettingsForm'
 import { ComputedRecipeTable } from './ComputedRecipeTable'
 import { RecipeAnalysisTable } from './RecipeAnalysisTable'
+import { PodPacPanel } from './PodPacPanel'
 import { ErrorBanner } from './ErrorBanner'
 import { IngredientManager } from '@/components/ingredients/IngredientManager'
 
@@ -15,6 +16,8 @@ const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruitIngredientId' | 'otherSugarIngred
   targetTotalSolidsPct: 30,
   stabilizerPct: 0.5,
   otherSugarPct: 3,
+  targetPOD: null,
+  targetPAC: null,
 }
 
 interface CalculatorAppProps {
@@ -111,6 +114,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
             <>
               <ComputedRecipeTable components={outcome.result.components} totals={outcome.result.totals} />
               <RecipeAnalysisTable result={outcome.result} />
+              <PodPacPanel result={outcome.result} sugarCandidates={otherSugars} onTargetChange={handleInputsChange} />
             </>
           )}
         </div>

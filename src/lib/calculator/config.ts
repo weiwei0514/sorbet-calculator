@@ -8,6 +8,9 @@ export const DEFAULT_SUCROSE_CONFIG: SyntheticComponentConfig = {
   waterPct: 0,
   sugarPct: 100,
   otherSolidsPct: 0,
+  // 蔗糖是 POD／PAC 的基準值 = 1.00（規格明訂的固定軸心，非使用者可調係數）。
+  podCoefficient: 1.0,
+  pacCoefficient: 1.0,
 }
 
 /** 膠體 — 依規格，100% 視為「其他固形物」。 */
@@ -17,6 +20,9 @@ export const DEFAULT_STABILIZER_CONFIG: SyntheticComponentConfig = {
   waterPct: 0,
   sugarPct: 0,
   otherSolidsPct: 100,
+  // sugarPct=0 讓貢獻恆為 0，這兩個係數只是補齊型別。
+  podCoefficient: 0,
+  pacCoefficient: 0,
 }
 
 export interface EngineConfig {

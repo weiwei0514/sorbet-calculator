@@ -16,6 +16,8 @@ function toRowInput(input: IngredientInput) {
     other_solids_pct: input.otherSolidsPct,
     recommended_min_pct: input.recommendedMinPct,
     recommended_max_pct: input.recommendedMaxPct,
+    pod_coefficient: input.podCoefficient,
+    pac_coefficient: input.pacCoefficient,
   }
 }
 

@@ -2,6 +2,7 @@ import type {
   ComponentBreakdown,
   CompositionPct,
   Ingredient,
+  PodPacTarget,
   RecipeInputs,
   RecipeResult,
   RecipeTotals,
@@ -87,7 +88,7 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
     'water',
     '水',
     waterWeightG,
-    { waterPct: 100, sugarPct: 0, otherSolidsPct: 0 },
+    { waterPct: 100, sugarPct: 0, otherSolidsPct: 0, podCoefficient: 0, pacCoefficient: 0 },
     totalWeightG
   )
 
@@ -95,6 +96,12 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
 
   const components: ComponentBreakdown[] = [fruitComp, otherSugarComp, stabilizerComp, sucroseComp, waterComp]
   const totals = sumTotals(components, totalWeightG)
+
+  const missingCoefficientIngredientNames: string[] = []
+  if (fruit.podCoefficient == null || fruit.pacCoefficient == null) missingCoefficientIngredientNames.push(fruit.name)
+  if (otherSugar.podCoefficient == null || otherSugar.pacCoefficient == null) {
+    missingCoefficientIngredientNames.push(otherSugar.name)
+  }
 
   const result: RecipeResult = {
     inputs,
@@ -106,6 +113,9 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
       otherSugarPct: compare(inputs.otherSugarPct, otherSugarComp.pctOfTotalWeight),
       stabilizerPct: compare(inputs.stabilizerPct, stabilizerComp.pctOfTotalWeight),
     },
+    podTarget: inputs.targetPOD == null ? null : podPacTarget(inputs.targetPOD, totals.totalPOD),
+    pacTarget: inputs.targetPAC == null ? null : podPacTarget(inputs.targetPAC, totals.totalPAC),
+    missingCoefficientIngredientNames,
     extraMetrics: {},
   }
 
@@ -116,12 +126,15 @@ function componentFrom(
   key: string,
   label: string,
   weightG: number,
-  comp: CompositionPct,
+  comp: CompositionPct & { podCoefficient: number | null; pacCoefficient: number | null },
   totalWeightG: number
 ): ComponentBreakdown {
   const waterG = weightG * (comp.waterPct / 100)
   const sugarG = weightG * (comp.sugarPct / 100)
   const otherSolidsG = weightG * (comp.otherSolidsPct / 100)
+  // POD/PAC coefficients are already decimals (0.45), never divide by 100 — only sugarPct needs the /100 conversion.
+  const podContributionG = sugarG * (comp.podCoefficient ?? 0)
+  const pacContributionG = sugarG * (comp.pacCoefficient ?? 0)
   return {
     key,
     label,
@@ -131,6 +144,10 @@ function componentFrom(
     otherSolidsG,
     totalSolidsG: sugarG + otherSolidsG,
     pctOfTotalWeight: totalWeightG > 0 ? (weightG / totalWeightG) * 100 : 0,
+    podCoefficient: comp.podCoefficient,
+    pacCoefficient: comp.pacCoefficient,
+    podContributionG,
+    pacContributionG,
   }
 }
 
@@ -141,8 +158,10 @@ function sumTotals(components: ComponentBreakdown[], totalWeightG: number): Reci
       waterG: a.waterG + c.waterG,
       sugarG: a.sugarG + c.sugarG,
       otherSolidsG: a.otherSolidsG + c.otherSolidsG,
+      totalPOD: a.totalPOD + c.podContributionG,
+      totalPAC: a.totalPAC + c.pacContributionG,
     }),
-    { weightG: 0, waterG: 0, sugarG: 0, otherSolidsG: 0 }
+    { weightG: 0, waterG: 0, sugarG: 0, otherSolidsG: 0, totalPOD: 0, totalPAC: 0 }
   )
   const totalSolidsG = acc.sugarG + acc.otherSolidsG
   return {
@@ -152,9 +171,14 @@ function sumTotals(components: ComponentBreakdown[], totalWeightG: number): Reci
     sugarPct: (acc.sugarG / totalWeightG) * 100,
     otherSolidsPct: (acc.otherSolidsG / totalWeightG) * 100,
     totalSolidsPct: (totalSolidsG / totalWeightG) * 100,
+    podPctOfWeight: totalWeightG > 0 ? (acc.totalPOD / totalWeightG) * 100 : 0,
   }
 }
 
 function compare(target: number, actual: number): TargetVsActual {
   return { target, actual, deltaPct: actual - target }
+}
+
+function podPacTarget(target: number, actual: number): PodPacTarget {
+  return { target, actual, gap: target - actual }
 }
