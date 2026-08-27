@@ -3,8 +3,9 @@ export function IngredientSearchBar({ value, onChange }: { value: string; onChan
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="搜尋食材名稱..."
-      className="w-full max-w-xs rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+      placeholder="搜尋食材名稱…"
+      className="w-full max-w-[220px] border-b bg-transparent pb-1.5 text-sm outline-none"
+      style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
     />
   )
 }

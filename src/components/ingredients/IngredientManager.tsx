@@ -8,11 +8,19 @@ import { createIngredient, deleteIngredient, updateIngredient } from '@/lib/ingr
 import { IngredientForm } from './IngredientForm'
 import { IngredientTable } from './IngredientTable'
 import { IngredientSearchBar } from './IngredientSearchBar'
+import { Section } from '@/components/ui/Section'
+import { Button } from '@/components/ui/Button'
 
 interface IngredientManagerProps {
   ingredients: Ingredient[]
   onIngredientsChange: (ingredients: Ingredient[]) => void
 }
+
+const CATEGORY_TABS: { value: 'all' | 'fruit' | 'other_sugar'; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'fruit', label: '水果' },
+  { value: 'other_sugar', label: '其他糖類' },
+]
 
 const NOT_CONFIGURED_MESSAGE =
   '無法連線到食材資料庫，請確認 .env.local 是否已填入正確的 Supabase 專案金鑰（NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY），並已在 Supabase 執行過 supabase/schema.sql。'
@@ -30,11 +38,14 @@ function getSupabaseClientOrNull(): SupabaseClient | null {
 
 export function IngredientManager({ ingredients, onIngredientsChange }: IngredientManagerProps) {
   const [search, setSearch] = useState('')
+  const [categoryTab, setCategoryTab] = useState<'all' | 'fruit' | 'other_sugar'>('all')
   const [editing, setEditing] = useState<Ingredient | null>(null)
   const [adding, setAdding] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const filtered = ingredients.filter((i) => i.name.toLowerCase().includes(search.trim().toLowerCase()))
+  const filtered = ingredients
+    .filter((i) => categoryTab === 'all' || i.category === categoryTab)
+    .filter((i) => i.name.toLowerCase().includes(search.trim().toLowerCase()))
 
   function handleSupabaseError(e: unknown) {
     console.error(e)
@@ -83,41 +94,51 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
   }
 
   return (
-    <section className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">食材資料庫</h2>
-        <div className="flex items-center gap-3">
+    <Section
+      eyebrow="Ingredient Database"
+      title="食材資料庫"
+      action={
+        <div className="flex items-center gap-4">
           <IngredientSearchBar value={search} onChange={setSearch} />
-          {!adding && !editing && (
-            <button
-              onClick={() => setAdding(true)}
-              className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
-            >
-              新增食材
-            </button>
-          )}
+          {!adding && !editing && <Button onClick={() => setAdding(true)}>新增食材</Button>}
         </div>
-      </div>
-
+      }
+    >
       {errorMessage && (
-        <p className="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        <p className="mb-6 border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--wine)', color: 'var(--muted)' }}>
           {errorMessage}
         </p>
       )}
 
       {adding && (
-        <div className="mb-4">
+        <div className="mb-8">
           <IngredientForm onSubmit={handleCreate} onCancel={() => setAdding(false)} />
         </div>
       )}
 
       {editing && (
-        <div className="mb-4">
+        <div className="mb-8">
           <IngredientForm initial={editing} onSubmit={handleUpdate} onCancel={() => setEditing(null)} />
         </div>
       )}
 
+      <div className="mb-6 flex gap-6 border-b" style={{ borderColor: 'var(--rule)' }}>
+        {CATEGORY_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setCategoryTab(tab.value)}
+            className="font-mono-label -mb-px border-b-2 pb-3 text-[10px]"
+            style={{
+              borderColor: categoryTab === tab.value ? 'var(--wine)' : 'transparent',
+              color: categoryTab === tab.value ? 'var(--wine)' : 'var(--faint)',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <IngredientTable ingredients={filtered} onEdit={setEditing} onDelete={handleDelete} />
-    </section>
+    </Section>
   )
 }

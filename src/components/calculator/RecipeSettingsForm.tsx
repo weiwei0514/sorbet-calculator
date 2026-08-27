@@ -1,6 +1,7 @@
 import type { Ingredient, RecipeInputs } from '@/lib/calculator/types'
 import { NumberField } from '@/components/ui/NumberField'
 import { PercentField } from '@/components/ui/PercentField'
+import { Section } from '@/components/ui/Section'
 
 interface RecipeSettingsFormProps {
   inputs: RecipeInputs
@@ -9,11 +10,47 @@ interface RecipeSettingsFormProps {
   onChange: (patch: Partial<RecipeInputs>) => void
 }
 
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+  emptyLabel,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: Ingredient[]
+  emptyLabel: string
+}) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+        {label}
+      </span>
+      <div className="border-b pb-1.5" style={{ borderColor: 'var(--rule)' }}>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-transparent text-lg font-medium outline-none"
+          style={{ color: 'var(--ink)' }}
+        >
+          {options.length === 0 && <option value="">{emptyLabel}</option>}
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </label>
+  )
+}
+
 export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: RecipeSettingsFormProps) {
   return (
-    <section className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-      <h2 className="mb-4 text-lg font-semibold">配方設定</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <Section eyebrow="Recipe Setup" title="配方設定">
+      <div className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
         <NumberField
           label="最終配方重量"
           value={inputs.totalWeightG}
@@ -23,21 +60,13 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           suffix="g"
         />
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">水果</span>
-          <select
-            value={inputs.fruitIngredientId}
-            onChange={(e) => onChange({ fruitIngredientId: e.target.value })}
-            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-          >
-            {fruits.length === 0 && <option value="">尚無水果資料</option>}
-            {fruits.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="水果"
+          value={inputs.fruitIngredientId}
+          onChange={(v) => onChange({ fruitIngredientId: v })}
+          options={fruits}
+          emptyLabel="尚無水果資料"
+        />
 
         <PercentField
           label="水果比例"
@@ -63,21 +92,13 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           step={0.1}
         />
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">其他糖類</span>
-          <select
-            value={inputs.otherSugarIngredientId}
-            onChange={(e) => onChange({ otherSugarIngredientId: e.target.value })}
-            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-          >
-            {otherSugars.length === 0 && <option value="">尚無其他糖類資料</option>}
-            {otherSugars.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="其他糖類"
+          value={inputs.otherSugarIngredientId}
+          onChange={(v) => onChange({ otherSugarIngredientId: v })}
+          options={otherSugars}
+          emptyLabel="尚無其他糖類資料"
+        />
 
         <PercentField
           label="其他糖類比例"
@@ -87,6 +108,6 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           max={5}
         />
       </div>
-    </section>
+    </Section>
   )
 }

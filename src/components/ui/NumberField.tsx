@@ -11,9 +11,11 @@ interface NumberFieldProps {
 
 export function NumberField({ label, value, onChange, min, max, step = 1, suffix, hint }: NumberFieldProps) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
-      <div className="flex items-center gap-2">
+    <label className="flex flex-col gap-2">
+      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+        {label}
+      </span>
+      <div className="flex items-baseline gap-2 border-b pb-1.5" style={{ borderColor: 'var(--rule)' }}>
         <input
           type="number"
           value={Number.isFinite(value) ? value : ''}
@@ -21,11 +23,20 @@ export function NumberField({ label, value, onChange, min, max, step = 1, suffix
           max={max}
           step={step}
           onChange={(e) => onChange(e.target.valueAsNumber)}
-          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className="tabular w-full bg-transparent text-lg font-medium outline-none"
+          style={{ color: 'var(--ink)' }}
         />
-        {suffix && <span className="text-sm text-neutral-500">{suffix}</span>}
+        {suffix && (
+          <span className="font-mono-label shrink-0 text-[10px]" style={{ color: 'var(--faint)' }}>
+            {suffix}
+          </span>
+        )}
       </div>
-      {hint && <span className="text-xs text-neutral-500">{hint}</span>}
+      {hint && (
+        <span className="text-xs" style={{ color: 'var(--faint)' }}>
+          {hint}
+        </span>
+      )}
     </label>
   )
 }
