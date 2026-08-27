@@ -46,22 +46,29 @@ export interface SyntheticComponentConfig extends CompositionPct {
   pacCoefficient: number
 }
 
+export interface IngredientAmount {
+  ingredientId: string
+  pct: number
+}
+
 export interface RecipeInputs {
   totalWeightG: number
-  fruitIngredientId: string
-  fruitPct: number
+  /** One or more fruits — the 25–60% hard limit applies to their SUM, not each row individually. */
+  fruits: IngredientAmount[]
   targetTotalSolidsPct: number
   stabilizerPct: number
-  otherSugarIngredientId: string
-  otherSugarPct: number
+  /** One or more "other sugar" ingredients — the 1–5% hard limit applies to their SUM. */
+  otherSugars: IngredientAmount[]
   /** Optional POD/PAC targets for the reverse-adjustment hint. Null = not set, hide the gap section. */
   targetPOD: number | null
   targetPAC: number | null
 }
 
-/** One row of the "自動計算配方" breakdown table. */
+/** One row of the "自動計算配方" breakdown table. `key` is unique per row (e.g. multiple
+ *  fruits each get their own key); `category` is what identity/color/filtering keys off. */
 export interface ComponentBreakdown {
   key: string
+  category: 'fruit' | 'otherSugar' | 'stabilizer' | 'sucrose' | 'water'
   label: string
   weightG: number
   waterG: number

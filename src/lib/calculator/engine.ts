@@ -12,10 +12,15 @@ import type {
 import { DEFAULT_ENGINE_CONFIG, type EngineConfig } from './config'
 import { validateIngredientComposition, validateRecipeInputs } from './validate'
 
+export interface WeightedIngredient {
+  ingredient: Ingredient
+  pct: number
+}
+
 export interface CalculateRecipeArgs {
   inputs: RecipeInputs
-  fruit: Ingredient
-  otherSugar: Ingredient
+  fruits: WeightedIngredient[]
+  otherSugars: WeightedIngredient[]
   config?: EngineConfig
 }
 
@@ -26,31 +31,34 @@ export type CalculationOutcome =
 const EPSILON = 1e-9
 
 export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
-  const { inputs, fruit, otherSugar, config = DEFAULT_ENGINE_CONFIG } = args
+  const { inputs, fruits, otherSugars, config = DEFAULT_ENGINE_CONFIG } = args
 
   const errors: ValidationError[] = [
     ...validateRecipeInputs(inputs),
-    ...validateIngredientComposition(fruit),
-    ...validateIngredientComposition(otherSugar),
+    ...fruits.flatMap((f) => validateIngredientComposition(f.ingredient)),
+    ...otherSugars.flatMap((s) => validateIngredientComposition(s.ingredient)),
   ]
   if (errors.length > 0) return { ok: false, result: null, errors }
 
   const { totalWeightG } = inputs
 
-  const fruitWeightG = totalWeightG * (inputs.fruitPct / 100)
-  const fruitComp = componentFrom('fruit', `水果：${fruit.name}`, fruitWeightG, fruit, totalWeightG)
-
-  const otherSugarWeightG = totalWeightG * (inputs.otherSugarPct / 100)
-  const otherSugarComp = componentFrom(
-    'otherSugar',
-    `其他糖類：${otherSugar.name}`,
-    otherSugarWeightG,
-    otherSugar,
-    totalWeightG
+  const fruitComps = fruits.map(({ ingredient, pct }) =>
+    componentFrom(`fruit-${ingredient.id}`, 'fruit', `水果：${ingredient.name}`, totalWeightG * (pct / 100), ingredient, totalWeightG)
+  )
+  const otherSugarComps = otherSugars.map(({ ingredient, pct }) =>
+    componentFrom(
+      `otherSugar-${ingredient.id}`,
+      'otherSugar',
+      `其他糖類：${ingredient.name}`,
+      totalWeightG * (pct / 100),
+      ingredient,
+      totalWeightG
+    )
   )
 
   const stabilizerWeightG = totalWeightG * (inputs.stabilizerPct / 100)
   const stabilizerComp = componentFrom(
+    'stabilizer',
     'stabilizer',
     config.stabilizer.label,
     stabilizerWeightG,
@@ -59,7 +67,8 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
   )
 
   const targetTotalSolidsG = totalWeightG * (inputs.targetTotalSolidsPct / 100)
-  const knownSolidsG = fruitComp.totalSolidsG + otherSugarComp.totalSolidsG + stabilizerComp.totalSolidsG
+  const knownSolidsG =
+    sumBy(fruitComps, (c) => c.totalSolidsG) + sumBy(otherSugarComps, (c) => c.totalSolidsG) + stabilizerComp.totalSolidsG
   const rawSucroseWeightG = targetTotalSolidsG - knownSolidsG
 
   if (rawSucroseWeightG < -EPSILON) {
@@ -70,9 +79,10 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
     })
   }
   const sucroseWeightG = Math.max(0, rawSucroseWeightG)
-  const sucroseComp = componentFrom('sucrose', config.sucrose.label, sucroseWeightG, config.sucrose, totalWeightG)
+  const sucroseComp = componentFrom('sucrose', 'sucrose', config.sucrose.label, sucroseWeightG, config.sucrose, totalWeightG)
 
-  const usedSoFarG = fruitComp.weightG + otherSugarComp.weightG + stabilizerComp.weightG + sucroseComp.weightG
+  const usedSoFarG =
+    sumBy(fruitComps, (c) => c.weightG) + sumBy(otherSugarComps, (c) => c.weightG) + stabilizerComp.weightG + sucroseComp.weightG
   const rawWaterWeightG = totalWeightG - usedSoFarG
 
   if (rawWaterWeightG < -EPSILON) {
@@ -86,6 +96,7 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
   const waterWeightG = Math.max(0, rawWaterWeightG)
   const waterComp = componentFrom(
     'water',
+    'water',
     '水',
     waterWeightG,
     { waterPct: 100, sugarPct: 0, otherSolidsPct: 0, podCoefficient: 0, pacCoefficient: 0 },
@@ -94,14 +105,17 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
 
   if (errors.length > 0) return { ok: false, result: null, errors }
 
-  const components: ComponentBreakdown[] = [fruitComp, otherSugarComp, stabilizerComp, sucroseComp, waterComp]
+  const components: ComponentBreakdown[] = [...fruitComps, ...otherSugarComps, stabilizerComp, sucroseComp, waterComp]
   const totals = sumTotals(components, totalWeightG)
 
-  const missingCoefficientIngredientNames: string[] = []
-  if (fruit.podCoefficient == null || fruit.pacCoefficient == null) missingCoefficientIngredientNames.push(fruit.name)
-  if (otherSugar.podCoefficient == null || otherSugar.pacCoefficient == null) {
-    missingCoefficientIngredientNames.push(otherSugar.name)
-  }
+  const missingCoefficientIngredientNames: string[] = [...fruits, ...otherSugars]
+    .filter(({ ingredient }) => ingredient.podCoefficient == null || ingredient.pacCoefficient == null)
+    .map(({ ingredient }) => ingredient.name)
+
+  const totalFruitPct = sumBy(fruits, (f) => f.pct)
+  const totalOtherSugarPct = sumBy(otherSugars, (s) => s.pct)
+  const actualFruitPct = sumBy(fruitComps, (c) => c.pctOfTotalWeight)
+  const actualOtherSugarPct = sumBy(otherSugarComps, (c) => c.pctOfTotalWeight)
 
   const result: RecipeResult = {
     inputs,
@@ -109,8 +123,8 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
     totals,
     comparison: {
       totalSolidsPct: compare(inputs.targetTotalSolidsPct, totals.totalSolidsPct),
-      fruitPct: compare(inputs.fruitPct, fruitComp.pctOfTotalWeight),
-      otherSugarPct: compare(inputs.otherSugarPct, otherSugarComp.pctOfTotalWeight),
+      fruitPct: compare(totalFruitPct, actualFruitPct),
+      otherSugarPct: compare(totalOtherSugarPct, actualOtherSugarPct),
       stabilizerPct: compare(inputs.stabilizerPct, stabilizerComp.pctOfTotalWeight),
     },
     podTarget: inputs.targetPOD == null ? null : podPacTarget(inputs.targetPOD, totals.totalPOD),
@@ -122,8 +136,13 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
   return { ok: true, result, errors: [] }
 }
 
+function sumBy<T>(items: T[], fn: (item: T) => number): number {
+  return items.reduce((sum, item) => sum + fn(item), 0)
+}
+
 function componentFrom(
   key: string,
+  category: ComponentBreakdown['category'],
   label: string,
   weightG: number,
   comp: CompositionPct & { podCoefficient: number | null; pacCoefficient: number | null },
@@ -137,6 +156,7 @@ function componentFrom(
   const pacContributionG = sugarG * (comp.pacCoefficient ?? 0)
   return {
     key,
+    category,
     label,
     weightG,
     waterG,

@@ -20,7 +20,7 @@ export function CompositionBar({ components }: { components: ComponentBreakdown[
               key={c.key}
               title={`${c.label} · ${fmt(c.weightG)}g · ${fmt(c.pctOfTotalWeight)}%`}
               className="flex h-full items-center justify-center overflow-hidden first:rounded-l-[4px] last:rounded-r-[4px]"
-              style={{ width: `${c.pctOfTotalWeight}%`, background: componentColor(c.key) }}
+              style={{ width: `${c.pctOfTotalWeight}%`, background: componentColor(c.category) }}
             >
               {c.pctOfTotalWeight >= MIN_LABEL_PCT && (
                 <span className="font-mono-label truncate px-1.5 text-[9px] text-white">
@@ -36,7 +36,7 @@ export function CompositionBar({ components }: { components: ComponentBreakdown[
           <li key={c.key} className="flex items-center gap-2 text-xs" style={{ color: 'var(--muted)' }}>
             <span
               className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
-              style={{ background: componentColor(c.key) }}
+              style={{ background: componentColor(c.category) }}
             />
             <span>{c.label.replace(/^水果：|^其他糖類：/, '')}</span>
             <span className="tabular" style={{ color: 'var(--faint)' }}>

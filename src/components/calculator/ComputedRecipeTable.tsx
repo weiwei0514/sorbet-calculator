@@ -43,7 +43,7 @@ export function ComputedRecipeTable({
                 <span className="flex items-center gap-2">
                   <span
                     className="inline-block h-2 w-2 shrink-0 rounded-full"
-                    style={{ background: componentColor(c.key) }}
+                    style={{ background: componentColor(c.category) }}
                   />
                   {shortLabel(c.label)}
                 </span>

@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { Ingredient, RecipeInputs } from '@/lib/calculator/types'
-import { calculateRecipe } from '@/lib/calculator/engine'
+import type { Ingredient, IngredientAmount, RecipeInputs } from '@/lib/calculator/types'
+import { calculateRecipe, type WeightedIngredient } from '@/lib/calculator/engine'
 import { RecipeSettingsForm } from './RecipeSettingsForm'
 import { ComputedRecipeTable } from './ComputedRecipeTable'
 import { RecipeAnalysisTable } from './RecipeAnalysisTable'
@@ -10,12 +10,10 @@ import { PodPacPanel } from './PodPacPanel'
 import { ErrorBanner } from './ErrorBanner'
 import { IngredientManager } from '@/components/ingredients/IngredientManager'
 
-const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruitIngredientId' | 'otherSugarIngredientId'> = {
+const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruits' | 'otherSugars'> = {
   totalWeightG: 1000,
-  fruitPct: 40,
   targetTotalSolidsPct: 30,
   stabilizerPct: 0.5,
-  otherSugarPct: 3,
   targetPOD: null,
   targetPAC: null,
 }
@@ -23,6 +21,20 @@ const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruitIngredientId' | 'otherSugarIngred
 interface CalculatorAppProps {
   initialIngredients: Ingredient[]
   isDemo?: boolean
+}
+
+/** Falls back any row pointing at a since-deleted ingredient to the first available
+ *  option of that category — same spirit as the old single-select fallback, applied per row. */
+function sanitizeRows(rows: IngredientAmount[], options: Ingredient[]): IngredientAmount[] {
+  if (options.length === 0) return rows
+  return rows.map((r) => (options.some((o) => o.id === r.ingredientId) ? r : { ...r, ingredientId: options[0].id }))
+}
+
+function resolveRows(rows: IngredientAmount[], options: Ingredient[]): WeightedIngredient[] {
+  return rows.flatMap((r) => {
+    const ingredient = options.find((o) => o.id === r.ingredientId)
+    return ingredient ? [{ ingredient, pct: r.pct }] : []
+  })
 }
 
 export function CalculatorApp({ initialIngredients, isDemo = false }: CalculatorAppProps) {
@@ -33,45 +45,31 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
 
   const [inputs, setInputs] = useState<RecipeInputs>(() => ({
     ...DEFAULT_INPUTS,
-    fruitIngredientId: initialIngredients.find((i) => i.category === 'fruit')?.id ?? '',
-    otherSugarIngredientId: initialIngredients.find((i) => i.category === 'other_sugar')?.id ?? '',
+    fruits: [{ ingredientId: initialIngredients.find((i) => i.category === 'fruit')?.id ?? '', pct: 40 }],
+    otherSugars: [{ ingredientId: initialIngredients.find((i) => i.category === 'other_sugar')?.id ?? '', pct: 3 }],
   }))
 
   function handleInputsChange(patch: Partial<RecipeInputs>) {
     setInputs((prev) => ({ ...prev, ...patch }))
   }
 
-  // Fall back to the first available ingredient of the right category if the
-  // previously selected one no longer exists (e.g. deleted via the manager below).
-  // Computed during render rather than synced back into state via an effect.
-  const selectedFruit = fruits.find((f) => f.id === inputs.fruitIngredientId) ?? fruits[0]
-  const selectedOtherSugar = otherSugars.find((s) => s.id === inputs.otherSugarIngredientId) ?? otherSugars[0]
-
+  // Fall back stale ingredient ids (e.g. deleted via the manager below) to the first
+  // available option of that category. Computed during render rather than synced back
+  // into state via an effect.
   const effectiveInputs: RecipeInputs = useMemo(
     () => ({
       ...inputs,
-      fruitIngredientId: selectedFruit?.id ?? '',
-      otherSugarIngredientId: selectedOtherSugar?.id ?? '',
+      fruits: sanitizeRows(inputs.fruits, fruits),
+      otherSugars: sanitizeRows(inputs.otherSugars, otherSugars),
     }),
-    [inputs, selectedFruit, selectedOtherSugar]
+    [inputs, fruits, otherSugars]
   )
 
   const outcome = useMemo(() => {
-    if (!selectedFruit || !selectedOtherSugar) {
-      return {
-        ok: false as const,
-        result: null,
-        errors: [
-          {
-            field: 'ingredients',
-            code: 'MISSING_INGREDIENT',
-            message: '請先在下方食材資料庫新增至少一種水果與一種其他糖類，才能計算配方。',
-          },
-        ],
-      }
-    }
-    return calculateRecipe({ inputs: effectiveInputs, fruit: selectedFruit, otherSugar: selectedOtherSugar })
-  }, [effectiveInputs, selectedFruit, selectedOtherSugar])
+    const resolvedFruits = resolveRows(effectiveInputs.fruits, fruits)
+    const resolvedOtherSugars = resolveRows(effectiveInputs.otherSugars, otherSugars)
+    return calculateRecipe({ inputs: effectiveInputs, fruits: resolvedFruits, otherSugars: resolvedOtherSugars })
+  }, [effectiveInputs, fruits, otherSugars])
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10 sm:gap-14 sm:px-6 sm:py-16 lg:px-10">

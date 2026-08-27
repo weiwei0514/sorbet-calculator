@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { calculateRecipe } from '../engine'
-import type { Ingredient, RecipeInputs } from '../types'
+import { calculateRecipe, type WeightedIngredient } from '../engine'
+import type { Ingredient, IngredientAmount, RecipeInputs } from '../types'
 
 const strawberry: Ingredient = {
   id: 'strawberry',
@@ -11,6 +11,20 @@ const strawberry: Ingredient = {
   otherSolidsPct: 4,
   totalSolidsPct: 13,
   recommendedMinPct: 35,
+  recommendedMaxPct: 60,
+  podCoefficient: null,
+  pacCoefficient: null,
+}
+
+const mango: Ingredient = {
+  id: 'mango',
+  name: '芒果',
+  category: 'fruit',
+  waterPct: 82,
+  sugarPct: 15,
+  otherSolidsPct: 3,
+  totalSolidsPct: 18,
+  recommendedMinPct: 40,
   recommendedMaxPct: 60,
   podCoefficient: null,
   pacCoefficient: null,
@@ -45,20 +59,28 @@ const trehalose: Ingredient = {
   pacCoefficient: 0.45,
 }
 
+const POOL = [strawberry, mango, glucosePowder, trehalose]
+
+function toWeighted(rows: IngredientAmount[], pool: Ingredient[] = POOL): WeightedIngredient[] {
+  return rows.flatMap((r) => {
+    const ingredient = pool.find((i) => i.id === r.ingredientId)
+    return ingredient ? [{ ingredient, pct: r.pct }] : []
+  })
+}
+
 const baseInputs: RecipeInputs = {
   totalWeightG: 1000,
-  fruitIngredientId: strawberry.id,
-  fruitPct: 40,
+  fruits: [{ ingredientId: strawberry.id, pct: 40 }],
   targetTotalSolidsPct: 30,
   stabilizerPct: 0.5,
-  otherSugarIngredientId: glucosePowder.id,
-  otherSugarPct: 3,
+  otherSugars: [{ ingredientId: glucosePowder.id, pct: 3 }],
   targetPOD: null,
   targetPAC: null,
 }
 
-function run(inputs: Partial<RecipeInputs> = {}, fruit = strawberry, otherSugar = glucosePowder) {
-  return calculateRecipe({ inputs: { ...baseInputs, ...inputs }, fruit, otherSugar })
+function run(inputsOverride: Partial<RecipeInputs> = {}) {
+  const inputs: RecipeInputs = { ...baseInputs, ...inputsOverride }
+  return calculateRecipe({ inputs, fruits: toWeighted(inputs.fruits), otherSugars: toWeighted(inputs.otherSugars) })
 }
 
 describe('calculateRecipe — spec worked example', () => {
@@ -69,15 +91,15 @@ describe('calculateRecipe — spec worked example', () => {
 
     const byKey = Object.fromEntries(outcome.result.components.map((c) => [c.key, c]))
 
-    expect(byKey.fruit.weightG).toBeCloseTo(400, 6)
-    expect(byKey.fruit.waterG).toBeCloseTo(348, 6)
-    expect(byKey.fruit.sugarG).toBeCloseTo(36, 6)
-    expect(byKey.fruit.otherSolidsG).toBeCloseTo(16, 6)
-    expect(byKey.fruit.totalSolidsG).toBeCloseTo(52, 6)
+    expect(byKey['fruit-strawberry'].weightG).toBeCloseTo(400, 6)
+    expect(byKey['fruit-strawberry'].waterG).toBeCloseTo(348, 6)
+    expect(byKey['fruit-strawberry'].sugarG).toBeCloseTo(36, 6)
+    expect(byKey['fruit-strawberry'].otherSolidsG).toBeCloseTo(16, 6)
+    expect(byKey['fruit-strawberry'].totalSolidsG).toBeCloseTo(52, 6)
 
-    expect(byKey.otherSugar.weightG).toBeCloseTo(30, 6)
-    expect(byKey.otherSugar.waterG).toBeCloseTo(5.7, 6)
-    expect(byKey.otherSugar.sugarG).toBeCloseTo(24.3, 6)
+    expect(byKey['otherSugar-glucose-powder'].weightG).toBeCloseTo(30, 6)
+    expect(byKey['otherSugar-glucose-powder'].waterG).toBeCloseTo(5.7, 6)
+    expect(byKey['otherSugar-glucose-powder'].sugarG).toBeCloseTo(24.3, 6)
 
     expect(byKey.stabilizer.weightG).toBeCloseTo(5, 6)
     expect(byKey.stabilizer.otherSolidsG).toBeCloseTo(5, 6)
@@ -94,12 +116,14 @@ describe('calculateRecipe — spec worked example', () => {
   })
 
   it('flags infeasible solids target instead of returning a negative sucrose amount', () => {
-    const outcome = run({ fruitPct: 60, targetTotalSolidsPct: 26 }, {
-      ...strawberry,
-      waterPct: 60,
-      sugarPct: 30,
-      otherSolidsPct: 10,
-      totalSolidsPct: 40,
+    // Note: this fruit has the same id as `strawberry` but different (much higher) solids,
+    // so it must be passed directly as the resolved ingredient rather than via the `run()`
+    // helper's POOL lookup (which would resolve back to the real, low-solids strawberry).
+    const highSolidsFruit: Ingredient = { ...strawberry, waterPct: 60, sugarPct: 30, otherSolidsPct: 10, totalSolidsPct: 40 }
+    const outcome = calculateRecipe({
+      inputs: { ...baseInputs, fruits: [{ ingredientId: highSolidsFruit.id, pct: 60 }], targetTotalSolidsPct: 26 },
+      fruits: [{ ingredient: highSolidsFruit, pct: 60 }],
+      otherSugars: toWeighted(baseInputs.otherSugars),
     })
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
@@ -108,26 +132,86 @@ describe('calculateRecipe — spec worked example', () => {
   })
 
   it('flags infeasible water instead of returning a negative water amount', () => {
-    const outcome = run({ fruitPct: 60, otherSugarPct: 5, stabilizerPct: 40, targetTotalSolidsPct: 34 })
+    const outcome = run({
+      fruits: [{ ingredientId: strawberry.id, pct: 60 }],
+      otherSugars: [{ ingredientId: glucosePowder.id, pct: 5 }],
+      stabilizerPct: 40,
+      targetTotalSolidsPct: 34,
+    })
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
     expect(outcome.errors.some((e) => e.code === 'INFEASIBLE_WATER')).toBe(true)
   })
 
   it('returns all range violations at once instead of failing fast', () => {
-    const outcome = run({ fruitPct: 10, targetTotalSolidsPct: 50 })
+    const outcome = run({ fruits: [{ ingredientId: strawberry.id, pct: 10 }], targetTotalSolidsPct: 50 })
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
-    expect(outcome.errors.some((e) => e.field === 'fruitPct')).toBe(true)
+    expect(outcome.errors.some((e) => e.field === 'fruits')).toBe(true)
     expect(outcome.errors.some((e) => e.field === 'targetTotalSolidsPct')).toBe(true)
   })
 
   it('rejects an ingredient whose composition does not sum to 100%', () => {
     const badFruit: Ingredient = { ...strawberry, waterPct: 50, sugarPct: 40, otherSolidsPct: 5, totalSolidsPct: 45 }
-    const outcome = run({}, badFruit)
+    const outcome = calculateRecipe({
+      inputs: { ...baseInputs, fruits: [{ ingredientId: badFruit.id, pct: 40 }] },
+      fruits: [{ ingredient: badFruit, pct: 40 }],
+      otherSugars: toWeighted(baseInputs.otherSugars),
+    })
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
     expect(outcome.errors.some((e) => e.code === 'COMPOSITION_NOT_100')).toBe(true)
+  })
+})
+
+describe('calculateRecipe — multiple fruits / multiple other sugars', () => {
+  it('allows a single fruit below 25% as long as the SUM is within 25-60%', () => {
+    // 25% + 20% = 45% total, but each row individually can be under 25 (mango at 20%).
+    const outcome = run({
+      fruits: [
+        { ingredientId: strawberry.id, pct: 25 },
+        { ingredientId: mango.id, pct: 20 },
+      ],
+    })
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+    expect(outcome.result.comparison.fruitPct.target).toBeCloseTo(45, 6)
+    expect(outcome.result.comparison.fruitPct.actual).toBeCloseTo(45, 6)
+  })
+
+  it('sums POD/PAC contributions across multiple other-sugar rows', () => {
+    const outcome = run({
+      otherSugars: [
+        { ingredientId: glucosePowder.id, pct: 2 },
+        { ingredientId: trehalose.id, pct: 2 },
+      ],
+    })
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+
+    const trehaloseComp = outcome.result.components.find((c) => c.key === 'otherSugar-trehalose')!
+    // 1000g * 2% = 20g trehalose, 100% sugar, POD/PAC 0.45 -> 20 * 1.0 * 0.45 = 9
+    expect(trehaloseComp.podContributionG).toBeCloseTo(9, 6)
+    expect(trehaloseComp.pacContributionG).toBeCloseTo(9, 6)
+  })
+
+  it('rejects an empty fruit list without throwing', () => {
+    const outcome = run({ fruits: [] })
+    expect(outcome.ok).toBe(false)
+    if (outcome.ok) return
+    expect(outcome.errors.some((e) => e.field === 'fruits' && e.code === 'REQUIRED')).toBe(true)
+  })
+
+  it('rejects a fruit total outside 25-60% even when split across multiple rows', () => {
+    const outcome = run({
+      fruits: [
+        { ingredientId: strawberry.id, pct: 5 },
+        { ingredientId: mango.id, pct: 5 },
+      ],
+    })
+    expect(outcome.ok).toBe(false)
+    if (outcome.ok) return
+    expect(outcome.errors.some((e) => e.field === 'fruits' && e.message.includes('總和'))).toBe(true)
   })
 })
 
@@ -145,11 +229,11 @@ describe('calculateRecipe — POD/PAC', () => {
 
   it('海藻糖 100g at POD/PAC 0.45 contributes exactly 45, matching the spec example', () => {
     // 2000g total, 5% other-sugar -> exactly 100g of trehalose.
-    const outcome = run({ totalWeightG: 2000, otherSugarPct: 5 }, strawberry, trehalose)
+    const outcome = run({ totalWeightG: 2000, otherSugars: [{ ingredientId: trehalose.id, pct: 5 }] })
     expect(outcome.ok).toBe(true)
     if (!outcome.ok) return
 
-    const otherSugar = outcome.result.components.find((c) => c.key === 'otherSugar')!
+    const otherSugar = outcome.result.components.find((c) => c.key === 'otherSugar-trehalose')!
     expect(otherSugar.weightG).toBeCloseTo(100, 6)
     expect(otherSugar.podContributionG).toBeCloseTo(45, 6)
     expect(otherSugar.pacContributionG).toBeCloseTo(45, 6)

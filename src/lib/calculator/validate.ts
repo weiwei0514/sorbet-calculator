@@ -3,12 +3,26 @@ import type { RecipeInputs, ValidationError } from './types'
 export function validateRecipeInputs(inputs: RecipeInputs): ValidationError[] {
   const errors: ValidationError[] = []
 
-  if (inputs.fruitPct < 25 || inputs.fruitPct > 60) {
-    errors.push({
-      field: 'fruitPct',
-      code: 'OUT_OF_RANGE',
-      message: `水果比例需介於 25%~60%（目前為 ${inputs.fruitPct}%）`,
+  if (inputs.fruits.length === 0) {
+    errors.push({ field: 'fruits', code: 'REQUIRED', message: '請至少新增一種水果' })
+  } else {
+    inputs.fruits.forEach((f, i) => {
+      if (!(f.pct > 0)) {
+        errors.push({
+          field: 'fruits',
+          code: 'OUT_OF_RANGE',
+          message: `第 ${i + 1} 項水果比例需大於 0（目前為 ${f.pct}%）`,
+        })
+      }
     })
+    const totalFruitPct = inputs.fruits.reduce((sum, f) => sum + f.pct, 0)
+    if (totalFruitPct < 25 || totalFruitPct > 60) {
+      errors.push({
+        field: 'fruits',
+        code: 'OUT_OF_RANGE',
+        message: `水果比例總和需介於 25%~60%（目前總和為 ${totalFruitPct.toFixed(1)}%）`,
+      })
+    }
   }
 
   if (inputs.targetTotalSolidsPct < 26 || inputs.targetTotalSolidsPct > 34) {
@@ -19,12 +33,26 @@ export function validateRecipeInputs(inputs: RecipeInputs): ValidationError[] {
     })
   }
 
-  if (inputs.otherSugarPct < 1 || inputs.otherSugarPct > 5) {
-    errors.push({
-      field: 'otherSugarPct',
-      code: 'OUT_OF_RANGE',
-      message: `其他糖類比例需介於 1%~5%（目前為 ${inputs.otherSugarPct}%）`,
+  if (inputs.otherSugars.length === 0) {
+    errors.push({ field: 'otherSugars', code: 'REQUIRED', message: '請至少新增一種其他糖類' })
+  } else {
+    inputs.otherSugars.forEach((s, i) => {
+      if (!(s.pct > 0)) {
+        errors.push({
+          field: 'otherSugars',
+          code: 'OUT_OF_RANGE',
+          message: `第 ${i + 1} 項其他糖類比例需大於 0（目前為 ${s.pct}%）`,
+        })
+      }
     })
+    const totalOtherSugarPct = inputs.otherSugars.reduce((sum, s) => sum + s.pct, 0)
+    if (totalOtherSugarPct < 1 || totalOtherSugarPct > 5) {
+      errors.push({
+        field: 'otherSugars',
+        code: 'OUT_OF_RANGE',
+        message: `其他糖類比例總和需介於 1%~5%（目前總和為 ${totalOtherSugarPct.toFixed(1)}%）`,
+      })
+    }
   }
 
   if (inputs.stabilizerPct < 0) {
