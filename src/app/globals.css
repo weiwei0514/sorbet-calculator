@@ -38,31 +38,8 @@
   --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #17130f;
-    --surface: #1f1a15;
-    --ink: #f2ece2;
-    --muted: rgba(242, 236, 226, 0.62);
-    --faint: rgba(242, 236, 226, 0.4);
-    --rule: rgba(242, 236, 226, 0.14);
-    --wine: #d98aa3;
-    --wine-deep: #f0a8bd;
-    --accent: #8fadd1;
-    --accent-deep: #b4cbe6;
-    --on-accent: #17130f;
-    --danger: #c96b6b;
-
-    --series-fruit: #c33a8f;
-    --series-other-sugar: #c8691f;
-    --series-stabilizer: #1aab9d;
-    --series-sucrose: #b58a1e;
-    --series-water: #5590c9;
-
-    --background: var(--bg);
-    --foreground: var(--ink);
-  }
-}
+/* Intentionally no @media (prefers-color-scheme: dark) override — this app always
+   renders the light/white palette regardless of the visitor's system theme. */
 
 * {
   border-color: var(--rule);
