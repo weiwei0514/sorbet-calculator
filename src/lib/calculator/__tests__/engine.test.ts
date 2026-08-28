@@ -259,4 +259,24 @@ describe('calculateRecipe — POD/PAC', () => {
     expect(outcome.result.missingCoefficientIngredientNames).toContain('草莓')
     expect(outcome.result.missingCoefficientIngredientNames).toContain('葡萄糖粉')
   })
+
+  it('podPer1000g/pacPer1000g stay constant when the batch is scaled at the same proportions, even though totals scale', () => {
+    const at1000g = run({ totalWeightG: 1000, otherSugars: [{ ingredientId: trehalose.id, pct: 3 }] })
+    const at3000g = run({ totalWeightG: 3000, otherSugars: [{ ingredientId: trehalose.id, pct: 3 }] })
+    expect(at1000g.ok).toBe(true)
+    expect(at3000g.ok).toBe(true)
+    if (!at1000g.ok || !at3000g.ok) return
+
+    // Totals scale 3x with the batch...
+    expect(at3000g.result.totals.totalPOD).toBeCloseTo(at1000g.result.totals.totalPOD * 3, 6)
+    expect(at3000g.result.totals.totalPAC).toBeCloseTo(at1000g.result.totals.totalPAC * 3, 6)
+
+    // ...but the per-1000g "strength" value does not.
+    expect(at3000g.result.totals.podPer1000g).toBeCloseTo(at1000g.result.totals.podPer1000g, 6)
+    expect(at3000g.result.totals.pacPer1000g).toBeCloseTo(at1000g.result.totals.pacPer1000g, 6)
+
+    // At exactly 1000g, per-1000g equals the total (spec's own worked example: 1000g -> POD 235.8 both ways).
+    expect(at1000g.result.totals.podPer1000g).toBeCloseTo(at1000g.result.totals.totalPOD, 6)
+    expect(at1000g.result.totals.pacPer1000g).toBeCloseTo(at1000g.result.totals.totalPAC, 6)
+  })
 })

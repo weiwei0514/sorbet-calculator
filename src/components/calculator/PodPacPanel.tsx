@@ -86,13 +86,17 @@ export function PodPacPanel({ result, sugarCandidates, onTargetChange }: PodPacP
         </p>
       )}
 
-      <div className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile label="總糖量" value={fmt(totals.sugarG)} unit="g" />
         <StatTile label="總糖比例" value={fmt(totals.sugarPct)} unit="%" />
         <StatTile label="總 POD" value={fmt(totals.totalPOD)} />
         <StatTile label="總 PAC" value={fmt(totals.totalPAC)} />
-        <StatTile label="POD 對總配方比例" value={fmt(totals.podPctOfWeight)} unit="%" />
+        <StatTile label="每 1000g POD" value={fmt(totals.podPer1000g)} />
+        <StatTile label="每 1000g PAC" value={fmt(totals.pacPer1000g)} />
       </div>
+      <p className="mb-10 text-xs" style={{ color: 'var(--faint)' }}>
+        總 POD／總 PAC 會隨配方總重量等比例變化；「每 1000g」是配方比例不變時保持不變的強度標準值，調整總重量放大縮小配方時可以用這兩個數字確認強度沒有跑掉。
+      </p>
 
       {(podTarget || pacTarget) && (
         <div className="mb-10 grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-2">

@@ -93,10 +93,14 @@ export interface RecipeTotals {
   sugarPct: number
   otherSolidsPct: number
   totalSolidsPct: number
+  /** Scales with totalWeightG — doubling the batch at the same proportions doubles this. */
   totalPOD: number
   totalPAC: number
-  /** totalPOD ÷ totalWeightG × 100 — "POD 對總配方比例" in the spec. */
-  podPctOfWeight: number
+  /** totalPOD ÷ totalWeightG × 1000 — the batch-size-independent "強度" value. Stays
+   *  constant when the recipe is scaled up/down at the same proportions, even though
+   *  totalPOD/totalPAC themselves scale with totalWeightG. */
+  podPer1000g: number
+  pacPer1000g: number
 }
 
 export interface TargetVsActual {

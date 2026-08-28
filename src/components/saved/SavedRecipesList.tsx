@@ -67,6 +67,22 @@ function PodPacSummary({ recipe }: { recipe: SavedRecipe }) {
           </span>
         )}
       </div>
+      <div className="flex flex-col gap-1">
+        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+          每 1000g POD
+        </span>
+        <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
+          {fmt(totals.podPer1000g)}
+        </span>
+      </div>
+      <div className="flex flex-col gap-1">
+        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+          每 1000g PAC
+        </span>
+        <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
+          {fmt(totals.pacPer1000g)}
+        </span>
+      </div>
     </div>
   )
 }

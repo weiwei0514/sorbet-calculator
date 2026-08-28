@@ -191,7 +191,8 @@ function sumTotals(components: ComponentBreakdown[], totalWeightG: number): Reci
     sugarPct: (acc.sugarG / totalWeightG) * 100,
     otherSolidsPct: (acc.otherSolidsG / totalWeightG) * 100,
     totalSolidsPct: (totalSolidsG / totalWeightG) * 100,
-    podPctOfWeight: totalWeightG > 0 ? (acc.totalPOD / totalWeightG) * 100 : 0,
+    podPer1000g: totalWeightG > 0 ? (acc.totalPOD / totalWeightG) * 1000 : 0,
+    pacPer1000g: totalWeightG > 0 ? (acc.totalPAC / totalWeightG) * 1000 : 0,
   }
 }
 
