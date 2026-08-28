@@ -8,8 +8,9 @@ interface IngredientAmountRowsProps {
   onChange: (rows: IngredientAmount[]) => void
   addLabel: string
   emptyLabel: string
-  rangeMin: number
-  rangeMax: number
+  /** Omit both to show the running total with no bound/warning — e.g. an unrestricted sum. */
+  rangeMin?: number
+  rangeMax?: number
   rangeUnitLabel: string
   newRowDefaultPct: number
   showRecommendedHint?: boolean
@@ -33,7 +34,8 @@ export function IngredientAmountRows({
   showRecommendedHint = false,
 }: IngredientAmountRowsProps) {
   const total = rows.reduce((sum, r) => sum + r.pct, 0)
-  const isOutOfRange = total < rangeMin || total > rangeMax
+  const hasRange = rangeMin != null && rangeMax != null
+  const isOutOfRange = hasRange && (total < rangeMin || total > rangeMax)
 
   function updateRow(index: number, patch: Partial<IngredientAmount>) {
     onChange(rows.map((r, i) => (i === index ? { ...r, ...patch } : r)))
@@ -54,7 +56,7 @@ export function IngredientAmountRows({
           {title}
         </span>
         <span className="tabular text-xs" style={{ color: isOutOfRange ? 'var(--danger)' : 'var(--faint)' }}>
-          {rangeUnitLabel}：{fmt(total)}%（範圍 {rangeMin}%~{rangeMax}%）
+          {rangeUnitLabel}：{fmt(total)}%{hasRange && `（範圍 ${rangeMin}%~${rangeMax}%）`}
         </span>
       </div>
 

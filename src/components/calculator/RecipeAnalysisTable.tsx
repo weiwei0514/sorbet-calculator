@@ -64,13 +64,13 @@ export function RecipeAnalysisTable({ result }: { result: RecipeResult }) {
           label="水果比例"
           actual={comparison.fruitPct.actual}
           target={comparison.fruitPct.target}
-          range={[25, 60]}
+          range={[10, 70]}
         />
         <RangeBar
           label="其他糖類比例"
           actual={comparison.otherSugarPct.actual}
           target={comparison.otherSugarPct.target}
-          range={[1, 5]}
+          axisMax={Math.max(comparison.otherSugarPct.target * 1.6, 1)}
         />
         <RangeBar
           label="膠體比例"

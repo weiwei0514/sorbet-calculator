@@ -8,6 +8,7 @@ import { deleteSavedRecipe } from '@/lib/savedRecipes/mutations'
 import { ComputedRecipeTable } from '@/components/calculator/ComputedRecipeTable'
 import { RecipeAnalysisTable } from '@/components/calculator/RecipeAnalysisTable'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 function fmt(n: number, digits = 1) {
   return n.toLocaleString('zh-TW', { maximumFractionDigits: digits, minimumFractionDigits: digits })
@@ -91,6 +92,7 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
   const [recipes, setRecipes] = useState<SavedRecipe[]>(initialRecipes)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<SavedRecipe | null>(null)
 
   function toggleExpanded(id: string) {
     setExpandedIds((prev) => {
@@ -124,6 +126,17 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
 
   return (
     <div className="flex flex-col gap-8">
+      <ConfirmDialog
+        open={pendingDelete != null}
+        title="刪除配方"
+        message={pendingDelete ? `確定要刪除「${pendingDelete.name}」嗎？此操作無法復原。` : ''}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) handleDelete(pendingDelete)
+          setPendingDelete(null)
+        }}
+      />
+
       {errorMessage && (
         <p className="border-l-2 pl-6 text-sm" style={{ borderColor: 'var(--danger)', color: 'var(--muted)' }}>
           {errorMessage}
@@ -172,7 +185,7 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
                   <RecipeAnalysisTable result={recipe.result} />
                   <PodPacSummary recipe={recipe} />
                   <div>
-                    <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(recipe)}>
+                    <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={() => setPendingDelete(recipe)}>
                       刪除此配方
                     </Button>
                   </div>

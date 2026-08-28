@@ -39,8 +39,8 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           onChange={(rows: IngredientAmount[]) => onChange({ fruits: rows })}
           addLabel="+ 新增水果"
           emptyLabel="尚無水果資料"
-          rangeMin={25}
-          rangeMax={60}
+          rangeMin={10}
+          rangeMax={70}
           rangeUnitLabel="水果比例總和"
           newRowDefaultPct={10}
           showRecommendedHint
@@ -53,8 +53,6 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           onChange={(rows: IngredientAmount[]) => onChange({ otherSugars: rows })}
           addLabel="+ 新增其他糖類"
           emptyLabel="尚無其他糖類資料"
-          rangeMin={1}
-          rangeMax={5}
           rangeUnitLabel="其他糖類比例總和"
           newRowDefaultPct={1}
         />

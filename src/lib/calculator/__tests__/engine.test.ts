@@ -152,7 +152,7 @@ describe('calculateRecipe — spec worked example', () => {
   })
 
   it('returns all range violations at once instead of failing fast', () => {
-    const outcome = run({ fruits: [{ ingredientId: strawberry.id, pct: 10 }], targetTotalSolidsPct: 50 })
+    const outcome = run({ fruits: [{ ingredientId: strawberry.id, pct: 5 }], targetTotalSolidsPct: 50 })
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
     expect(outcome.errors.some((e) => e.field === 'fruits')).toBe(true)
@@ -218,8 +218,8 @@ describe('calculateRecipe — fat / non-fat-solids', () => {
 })
 
 describe('calculateRecipe — multiple fruits / multiple other sugars', () => {
-  it('allows a single fruit below 25% as long as the SUM is within 25-60%', () => {
-    // 25% + 20% = 45% total, but each row individually can be under 25 (mango at 20%).
+  it('allows a single fruit below 10% as long as the SUM is within 10-70%', () => {
+    // 25% + 20% = 45% total, but each row individually can be under the sum-only range.
     const outcome = run({
       fruits: [
         { ingredientId: strawberry.id, pct: 25 },
@@ -255,11 +255,11 @@ describe('calculateRecipe — multiple fruits / multiple other sugars', () => {
     expect(outcome.errors.some((e) => e.field === 'fruits' && e.code === 'REQUIRED')).toBe(true)
   })
 
-  it('rejects a fruit total outside 25-60% even when split across multiple rows', () => {
+  it('rejects a fruit total outside 10-70% even when split across multiple rows', () => {
     const outcome = run({
       fruits: [
-        { ingredientId: strawberry.id, pct: 5 },
-        { ingredientId: mango.id, pct: 5 },
+        { ingredientId: strawberry.id, pct: 3 },
+        { ingredientId: mango.id, pct: 3 },
       ],
     })
     expect(outcome.ok).toBe(false)

@@ -16,11 +16,11 @@ export function validateRecipeInputs(inputs: RecipeInputs): ValidationError[] {
       }
     })
     const totalFruitPct = inputs.fruits.reduce((sum, f) => sum + f.pct, 0)
-    if (totalFruitPct < 25 || totalFruitPct > 60) {
+    if (totalFruitPct < 10 || totalFruitPct > 70) {
       errors.push({
         field: 'fruits',
         code: 'OUT_OF_RANGE',
-        message: `水果比例總和需介於 25%~60%（目前總和為 ${totalFruitPct.toFixed(1)}%）`,
+        message: `水果比例總和需介於 10%~70%（目前總和為 ${totalFruitPct.toFixed(1)}%）`,
       })
     }
   }
@@ -45,14 +45,7 @@ export function validateRecipeInputs(inputs: RecipeInputs): ValidationError[] {
         })
       }
     })
-    const totalOtherSugarPct = inputs.otherSugars.reduce((sum, s) => sum + s.pct, 0)
-    if (totalOtherSugarPct < 1 || totalOtherSugarPct > 5) {
-      errors.push({
-        field: 'otherSugars',
-        code: 'OUT_OF_RANGE',
-        message: `其他糖類比例總和需介於 1%~5%（目前總和為 ${totalOtherSugarPct.toFixed(1)}%）`,
-      })
-    }
+    // No sum-range check here on purpose — 其他糖類比例總和 is unrestricted (per user request).
   }
 
   if (inputs.stabilizerPct < 0) {

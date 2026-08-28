@@ -1,5 +1,9 @@
+'use client'
+
+import { useState } from 'react'
 import type { Ingredient } from '@/lib/calculator/types'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { IngredientCompositionBar } from './IngredientCompositionBar'
 
 interface IngredientTableProps {
@@ -73,6 +77,8 @@ function StatPair({ label, value }: { label: string; value: string }) {
 }
 
 export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, onToggleExpanded }: IngredientTableProps) {
+  const [pendingDelete, setPendingDelete] = useState<Ingredient | null>(null)
+
   if (ingredients.length === 0) {
     return (
       <p className="text-sm" style={{ color: 'var(--faint)' }}>
@@ -83,6 +89,17 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
 
   return (
     <>
+      <ConfirmDialog
+        open={pendingDelete != null}
+        title="刪除食材"
+        message={pendingDelete ? `確定要刪除「${pendingDelete.name}」嗎？此操作無法復原。` : ''}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) onDelete(pendingDelete)
+          setPendingDelete(null)
+        }}
+      />
+
       {/* Mobile: card list — a 7-column table doesn't fit a phone screen without cramped horizontal scroll.
           Each card is a bordered, tappable panel that stays collapsed to name + composition bar; tapping
           reveals the detail stats and only then the edit/delete actions. */}
@@ -125,7 +142,7 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
                     <StatPair label="PAC" value={fmtNullable(ing.pacCoefficient)} />
                   </div>
                   <div className="border-t pt-4" style={{ borderColor: 'var(--rule)' }}>
-                    <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
+                    <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={setPendingDelete} />
                   </div>
                 </div>
               )}
@@ -169,7 +186,7 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
                 <TD className="tabular text-right">{fmtNullable(ing.pacCoefficient)}</TD>
                 <TD className="text-right">
                   <div className="flex justify-end">
-                    <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
+                    <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={setPendingDelete} />
                   </div>
                 </TD>
               </TR>
