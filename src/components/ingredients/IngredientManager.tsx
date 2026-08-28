@@ -127,9 +127,6 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
       title="食材資料庫"
       action={
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <Button variant="outline" className="w-full sm:hidden" onClick={toggleExpandAll}>
-            {allExpanded ? '全部收合' : '全部展開'}
-          </Button>
           <IngredientSearchBar value={search} onChange={setSearch} />
           {!adding && !editing && (
             <Button className="w-full sm:w-auto" onClick={() => setAdding(true)}>
@@ -157,20 +154,29 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
         </div>
       )}
 
-      <div className="mb-6 flex gap-6 overflow-x-auto border-b" style={{ borderColor: 'var(--rule)' }}>
-        {CATEGORY_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setCategoryTab(tab.value)}
-            className="font-mono-label -mb-px flex min-h-11 shrink-0 items-center border-b-2 text-[10px]"
-            style={{
-              borderColor: categoryTab === tab.value ? 'var(--accent)' : 'transparent',
-              color: categoryTab === tab.value ? 'var(--accent)' : 'var(--faint)',
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="mb-6 flex items-center justify-between gap-4 border-b" style={{ borderColor: 'var(--rule)' }}>
+        <div className="flex gap-6 overflow-x-auto">
+          {CATEGORY_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setCategoryTab(tab.value)}
+              className="font-mono-label -mb-px flex min-h-11 shrink-0 items-center border-b-2 text-sm"
+              style={{
+                borderColor: categoryTab === tab.value ? 'var(--accent)' : 'transparent',
+                color: categoryTab === tab.value ? 'var(--accent)' : 'var(--faint)',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={toggleExpandAll}
+          className="font-mono-label min-h-11 shrink-0 text-sm hover:underline sm:hidden"
+          style={{ color: 'var(--accent)' }}
+        >
+          {allExpanded ? '全部收合' : '全部展開'}
+        </button>
       </div>
 
       <IngredientTable

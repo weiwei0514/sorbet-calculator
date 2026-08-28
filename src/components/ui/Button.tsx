@@ -5,7 +5,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE =
-  'font-mono-label text-[10px] px-5 min-h-11 inline-flex items-center justify-center transition-colors disabled:opacity-40'
+  'font-mono-label text-sm px-5 min-h-11 inline-flex items-center justify-center transition-colors disabled:opacity-40'
 
 export function Button({ variant = 'solid', className = '', style, ...props }: ButtonProps) {
   const variantStyle =

@@ -20,22 +20,38 @@ function ActionLinks({
   onDelete: (i: Ingredient) => void
 }) {
   return (
-    <div className="flex shrink-0 gap-5">
+    <div className="flex shrink-0 gap-6">
       <button
         onClick={() => onEdit(ingredient)}
-        className="font-mono-label min-h-11 text-[10px] hover:underline"
+        className="font-mono-label min-h-11 text-sm hover:underline"
         style={{ color: 'var(--accent)' }}
       >
         修改
       </button>
       <button
         onClick={() => onDelete(ingredient)}
-        className="font-mono-label min-h-11 text-[10px] hover:underline"
+        className="font-mono-label min-h-11 text-sm hover:underline"
         style={{ color: 'var(--danger)' }}
       >
         刪除
       </button>
     </div>
+  )
+}
+
+function Chevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden
+      className="shrink-0"
+      style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 180ms ease' }}
+    >
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }
 
@@ -68,38 +84,44 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
   return (
     <>
       {/* Mobile: card list — a 7-column table doesn't fit a phone screen without cramped horizontal scroll.
-          Each card stays collapsed to name + composition bar + actions; tap to reveal the detail stats. */}
-      <ul className="flex flex-col gap-5 sm:hidden">
+          Each card is a bordered, tappable panel that stays collapsed to name + composition bar; tapping
+          reveals the detail stats and only then the edit/delete actions. */}
+      <ul className="flex flex-col gap-3 sm:hidden">
         {ingredients.map((ing) => {
           const expanded = expandedIds.has(ing.id)
           return (
-            <li key={ing.id} className="flex flex-col gap-4 border-b pb-5" style={{ borderColor: 'var(--rule)' }}>
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  onClick={() => onToggleExpanded(ing.id)}
-                  className="flex min-h-11 flex-1 items-center gap-2 text-left"
-                  aria-expanded={expanded}
-                >
-                  <span aria-hidden className="text-xs" style={{ color: 'var(--faint)' }}>
-                    {expanded ? '▾' : '▸'}
-                  </span>
+            <li
+              key={ing.id}
+              className="overflow-hidden rounded-lg border"
+              style={{ borderColor: 'var(--rule)', background: expanded ? 'var(--rule)' : 'transparent' }}
+            >
+              <button
+                onClick={() => onToggleExpanded(ing.id)}
+                aria-expanded={expanded}
+                className="flex w-full flex-col gap-3 p-4 text-left active:opacity-70"
+              >
+                <div className="flex items-center justify-between gap-3">
                   <span className="font-display text-lg">{ing.name}</span>
-                </button>
-                <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
-              </div>
-
-              <button onClick={() => onToggleExpanded(ing.id)} aria-expanded={expanded} className="text-left">
+                  <span style={{ color: 'var(--faint)' }}>
+                    <Chevron expanded={expanded} />
+                  </span>
+                </div>
                 <IngredientCompositionBar ingredient={ing} />
               </button>
 
               {expanded && (
-                <div className="grid grid-cols-3 gap-3">
-                  <StatPair label="水分%" value={ing.waterPct.toFixed(1)} />
-                  <StatPair label="糖分%" value={ing.sugarPct.toFixed(1)} />
-                  <StatPair label="其他固形物%" value={ing.otherSolidsPct.toFixed(1)} />
-                  <StatPair label="總固形物%" value={ing.totalSolidsPct.toFixed(1)} />
-                  <StatPair label="POD" value={fmtNullable(ing.podCoefficient)} />
-                  <StatPair label="PAC" value={fmtNullable(ing.pacCoefficient)} />
+                <div className="flex flex-col gap-4 px-4 pb-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <StatPair label="水分%" value={ing.waterPct.toFixed(1)} />
+                    <StatPair label="糖分%" value={ing.sugarPct.toFixed(1)} />
+                    <StatPair label="其他固形物%" value={ing.otherSolidsPct.toFixed(1)} />
+                    <StatPair label="總固形物%" value={ing.totalSolidsPct.toFixed(1)} />
+                    <StatPair label="POD" value={fmtNullable(ing.podCoefficient)} />
+                    <StatPair label="PAC" value={fmtNullable(ing.pacCoefficient)} />
+                  </div>
+                  <div className="border-t pt-4" style={{ borderColor: 'var(--rule)' }}>
+                    <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
+                  </div>
                 </div>
               )}
             </li>
