@@ -49,10 +49,26 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
   const [editing, setEditing] = useState<Ingredient | null>(null)
   const [adding, setAdding] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   const filtered = ingredients
     .filter((i) => categoryTab === 'all' || i.category === categoryTab)
     .filter((i) => i.name.toLowerCase().includes(search.trim().toLowerCase()))
+
+  const allExpanded = filtered.length > 0 && filtered.every((i) => expandedIds.has(i.id))
+
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleExpandAll() {
+    setExpandedIds(allExpanded ? new Set() : new Set(filtered.map((i) => i.id)))
+  }
 
   function handleSupabaseError(e: unknown) {
     console.error(e)
@@ -111,6 +127,9 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
       title="食材資料庫"
       action={
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <Button variant="outline" className="w-full sm:hidden" onClick={toggleExpandAll}>
+            {allExpanded ? '全部收合' : '全部展開'}
+          </Button>
           <IngredientSearchBar value={search} onChange={setSearch} />
           {!adding && !editing && (
             <Button className="w-full sm:w-auto" onClick={() => setAdding(true)}>
@@ -154,7 +173,13 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
         ))}
       </div>
 
-      <IngredientTable ingredients={filtered} onEdit={setEditing} onDelete={handleDelete} />
+      <IngredientTable
+        ingredients={filtered}
+        onEdit={setEditing}
+        onDelete={handleDelete}
+        expandedIds={expandedIds}
+        onToggleExpanded={toggleExpanded}
+      />
     </Section>
   )
 }

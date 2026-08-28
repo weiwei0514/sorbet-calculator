@@ -6,6 +6,8 @@ interface IngredientTableProps {
   ingredients: Ingredient[]
   onEdit: (ingredient: Ingredient) => void
   onDelete: (ingredient: Ingredient) => void
+  expandedIds: Set<string>
+  onToggleExpanded: (id: string) => void
 }
 
 function ActionLinks({
@@ -18,7 +20,7 @@ function ActionLinks({
   onDelete: (i: Ingredient) => void
 }) {
   return (
-    <div className="flex gap-5">
+    <div className="flex shrink-0 gap-5">
       <button
         onClick={() => onEdit(ingredient)}
         className="font-mono-label min-h-11 text-[10px] hover:underline"
@@ -54,7 +56,7 @@ function StatPair({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTableProps) {
+export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, onToggleExpanded }: IngredientTableProps) {
   if (ingredients.length === 0) {
     return (
       <p className="text-sm" style={{ color: 'var(--faint)' }}>
@@ -65,25 +67,44 @@ export function IngredientTable({ ingredients, onEdit, onDelete }: IngredientTab
 
   return (
     <>
-      {/* Mobile: card list — a 7-column table doesn't fit a phone screen without cramped horizontal scroll. */}
+      {/* Mobile: card list — a 7-column table doesn't fit a phone screen without cramped horizontal scroll.
+          Each card stays collapsed to name + composition bar + actions; tap to reveal the detail stats. */}
       <ul className="flex flex-col gap-5 sm:hidden">
-        {ingredients.map((ing) => (
-          <li key={ing.id} className="flex flex-col gap-4 border-b pb-5" style={{ borderColor: 'var(--rule)' }}>
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-display text-lg">{ing.name}</span>
-              <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
-            </div>
-            <IngredientCompositionBar ingredient={ing} />
-            <div className="grid grid-cols-3 gap-3">
-              <StatPair label="水分%" value={ing.waterPct.toFixed(1)} />
-              <StatPair label="糖分%" value={ing.sugarPct.toFixed(1)} />
-              <StatPair label="其他固形物%" value={ing.otherSolidsPct.toFixed(1)} />
-              <StatPair label="總固形物%" value={ing.totalSolidsPct.toFixed(1)} />
-              <StatPair label="POD" value={fmtNullable(ing.podCoefficient)} />
-              <StatPair label="PAC" value={fmtNullable(ing.pacCoefficient)} />
-            </div>
-          </li>
-        ))}
+        {ingredients.map((ing) => {
+          const expanded = expandedIds.has(ing.id)
+          return (
+            <li key={ing.id} className="flex flex-col gap-4 border-b pb-5" style={{ borderColor: 'var(--rule)' }}>
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  onClick={() => onToggleExpanded(ing.id)}
+                  className="flex min-h-11 flex-1 items-center gap-2 text-left"
+                  aria-expanded={expanded}
+                >
+                  <span aria-hidden className="text-xs" style={{ color: 'var(--faint)' }}>
+                    {expanded ? '▾' : '▸'}
+                  </span>
+                  <span className="font-display text-lg">{ing.name}</span>
+                </button>
+                <ActionLinks ingredient={ing} onEdit={onEdit} onDelete={onDelete} />
+              </div>
+
+              <button onClick={() => onToggleExpanded(ing.id)} aria-expanded={expanded} className="text-left">
+                <IngredientCompositionBar ingredient={ing} />
+              </button>
+
+              {expanded && (
+                <div className="grid grid-cols-3 gap-3">
+                  <StatPair label="水分%" value={ing.waterPct.toFixed(1)} />
+                  <StatPair label="糖分%" value={ing.sugarPct.toFixed(1)} />
+                  <StatPair label="其他固形物%" value={ing.otherSolidsPct.toFixed(1)} />
+                  <StatPair label="總固形物%" value={ing.totalSolidsPct.toFixed(1)} />
+                  <StatPair label="POD" value={fmtNullable(ing.podCoefficient)} />
+                  <StatPair label="PAC" value={fmtNullable(ing.pacCoefficient)} />
+                </div>
+              )}
+            </li>
+          )
+        })}
       </ul>
 
       {/* sm+: full table */}
