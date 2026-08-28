@@ -5,6 +5,7 @@ import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
 import { createClient } from '@/lib/supabase/client'
 import { extractSupabaseMessage } from '@/lib/supabase/errors'
 import { deleteSavedRecipe } from '@/lib/savedRecipes/mutations'
+import { estimateStorageTemp, formatStorageTemp } from '@/lib/calculator/storageTemp'
 import { ComputedRecipeTable } from '@/components/calculator/ComputedRecipeTable'
 import { RecipeAnalysisTable } from '@/components/calculator/RecipeAnalysisTable'
 import { RecipeAiAnalysisPanel } from '@/components/saved/RecipeAiAnalysis'
@@ -40,8 +41,10 @@ function Chevron({ expanded }: { expanded: boolean }) {
 }
 
 function PodPacSummary({ recipe }: { recipe: SavedRecipe }) {
-  const { totals, podTarget, pacTarget } = recipe.result
+  const { totals, podTarget, pacTarget, missingCoefficientIngredientNames } = recipe.result
+  const storage = estimateStorageTemp(totals.pacPer1000g)
   return (
+    <div className="flex flex-col gap-5">
     <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
       <div className="flex flex-col gap-1">
         <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
@@ -83,6 +86,23 @@ function PodPacSummary({ recipe }: { recipe: SavedRecipe }) {
         </span>
         <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
           {fmt(totals.pacPer1000g)}
+        </span>
+      </div>
+    </div>
+
+      <div
+        className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-l-2 pl-4"
+        style={{ borderColor: 'var(--accent)' }}
+      >
+        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+          建議儲存溫度
+        </span>
+        <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
+          {formatStorageTemp(storage)}
+        </span>
+        <span className="text-xs" style={{ color: 'var(--faint)' }}>
+          參考表 {storage.band}
+          {missingCoefficientIngredientNames.length > 0 && ' ・ PAC 可能不完整，僅供參考'}
         </span>
       </div>
     </div>

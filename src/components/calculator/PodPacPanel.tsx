@@ -1,5 +1,6 @@
 import type { Ingredient, RecipeInputs, RecipeResult } from '@/lib/calculator/types'
 import { suggestSugarAdjustments } from '@/lib/calculator/podPacSuggestion'
+import { estimateStorageTemp, formatStorageTemp } from '@/lib/calculator/storageTemp'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 import { Section } from '@/components/ui/Section'
 
@@ -72,6 +73,7 @@ export function PodPacPanel({ result, sugarCandidates, onTargetChange }: PodPacP
   )
 
   const suggestions = suggestSugarAdjustments(result, sugarCandidates)
+  const storage = estimateStorageTemp(totals.pacPer1000g)
 
   return (
     <Section eyebrow="Sweetness & Freezing Point" title="甜度與抗凍力（POD／PAC）">
@@ -94,8 +96,27 @@ export function PodPacPanel({ result, sugarCandidates, onTargetChange }: PodPacP
         <StatTile label="每 1000g POD" value={fmt(totals.podPer1000g)} />
         <StatTile label="每 1000g PAC" value={fmt(totals.pacPer1000g)} />
       </div>
-      <p className="mb-10 text-xs" style={{ color: 'var(--faint)' }}>
+      <p className="mb-6 text-xs" style={{ color: 'var(--faint)' }}>
         總 POD／總 PAC 會隨配方總重量等比例變化；「每 1000g」是配方比例不變時保持不變的強度標準值，調整總重量放大縮小配方時可以用這兩個數字確認強度沒有跑掉。
+      </p>
+
+      <div
+        className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-l-2 pl-6"
+        style={{ borderColor: 'var(--accent)' }}
+      >
+        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+          建議儲存溫度
+        </span>
+        <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
+          {formatStorageTemp(storage)}
+        </span>
+        <span className="text-xs" style={{ color: 'var(--faint)' }}>
+          依每 1000g PAC {fmt(totals.pacPer1000g)}（參考表 {storage.band}）
+        </span>
+      </div>
+      <p className="mb-10 text-xs" style={{ color: 'var(--faint)' }}>
+        參考「冰淇淋抗凍力在各溫度下的數值」：PAC 241–260 對應 -10°C，之後每 +20 PAC 降 1°C。
+        {missingCoefficientIngredientNames.length > 0 && ' 目前有原料缺少 PAC 係數，此溫度可能偏高，僅供參考。'}
       </p>
 
       {(podTarget || pacTarget) && (
