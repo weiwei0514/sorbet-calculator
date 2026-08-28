@@ -25,6 +25,13 @@ const CATEGORY_TABS: { value: 'all' | 'fruit' | 'other_sugar'; label: string }[]
 const NOT_CONFIGURED_MESSAGE =
   '無法連線到食材資料庫，請確認 .env.local 是否已填入正確的 Supabase 專案金鑰（NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY），並已在 Supabase 執行過 supabase/schema.sql。'
 
+function extractSupabaseMessage(e: unknown): string | null {
+  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+    return (e as { message: string }).message
+  }
+  return null
+}
+
 /** Constructing the client throws synchronously if the env vars are placeholders/invalid.
  *  Deferred to each action (rather than useMemo at mount) so a misconfigured Supabase
  *  project surfaces as the same inline error message instead of crashing the component tree. */
@@ -49,7 +56,12 @@ export function IngredientManager({ ingredients, onIngredientsChange }: Ingredie
 
   function handleSupabaseError(e: unknown) {
     console.error(e)
-    setErrorMessage(NOT_CONFIGURED_MESSAGE)
+    const detail = extractSupabaseMessage(e)
+    setErrorMessage(
+      detail
+        ? `資料庫操作失敗：${detail}（若欄位不存在，通常代表 supabase/migrations/ 底下有些 SQL 還沒在 Supabase 執行過）`
+        : NOT_CONFIGURED_MESSAGE
+    )
   }
 
   async function handleCreate(input: IngredientInput) {
