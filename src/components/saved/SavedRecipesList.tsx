@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import type { SavedRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
 import { createClient } from '@/lib/supabase/client'
 import { extractSupabaseMessage } from '@/lib/supabase/errors'
 import { deleteSavedRecipe } from '@/lib/savedRecipes/mutations'
 import { ComputedRecipeTable } from '@/components/calculator/ComputedRecipeTable'
 import { RecipeAnalysisTable } from '@/components/calculator/RecipeAnalysisTable'
+import { RecipeAiAnalysisPanel } from '@/components/saved/RecipeAiAnalysis'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
@@ -103,6 +104,10 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
     })
   }
 
+  function handleAnalyzed(id: string, analysis: RecipeAiAnalysis) {
+    setRecipes((prev) => prev.map((r) => (r.id === id ? { ...r, aiAnalysis: analysis } : r)))
+  }
+
   async function handleDelete(recipe: SavedRecipe) {
     setErrorMessage(null)
     try {
@@ -184,6 +189,12 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
                   <ComputedRecipeTable components={recipe.result.components} totals={recipe.result.totals} />
                   <RecipeAnalysisTable result={recipe.result} />
                   <PodPacSummary recipe={recipe} />
+                  <div className="border-t pt-8" style={{ borderColor: 'var(--rule)' }}>
+                    <RecipeAiAnalysisPanel
+                      recipe={recipe}
+                      onAnalyzed={(analysis) => handleAnalyzed(recipe.id, analysis)}
+                    />
+                  </div>
                   <div>
                     <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={() => setPendingDelete(recipe)}>
                       刪除此配方

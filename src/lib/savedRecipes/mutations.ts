@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { RecipeInputs, RecipeResult, SavedRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, RecipeInputs, RecipeResult, SavedRecipe } from '@/lib/calculator/types'
 import { rowToSavedRecipe, type SavedRecipeRow } from './mapping'
 
 export interface CreateSavedRecipeInput {
@@ -20,5 +20,15 @@ export async function createSavedRecipe(client: SupabaseClient, input: CreateSav
 
 export async function deleteSavedRecipe(client: SupabaseClient, id: string): Promise<void> {
   const { error } = await client.from('saved_recipes').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Caches an AI 風味分析 onto a saved recipe row (see migration 0005). */
+export async function saveRecipeAiAnalysis(
+  client: SupabaseClient,
+  id: string,
+  analysis: RecipeAiAnalysis
+): Promise<void> {
+  const { error } = await client.from('saved_recipes').update({ ai_analysis: analysis }).eq('id', id)
   if (error) throw error
 }

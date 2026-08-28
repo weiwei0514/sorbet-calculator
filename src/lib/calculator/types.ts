@@ -163,6 +163,36 @@ export interface ValidationError {
   message: string
 }
 
+/** LLM-generated flavour + optimisation read of a saved recipe. Cached on the
+ *  saved_recipes row (see migration 0005) because a saved recipe is frozen — the
+ *  analysis only changes when the user explicitly asks to re-run it. The first
+ *  ten fields come straight from the model (schema in src/lib/aiAnalysis/schema.ts);
+ *  `generatedAt`/`model` are stamped by the API route. */
+export interface RecipeAiAnalysis {
+  /** 整體風味輪廓 */
+  flavorProfile: string
+  /** 甜度平衡判讀 */
+  sweetness: string
+  /** 酸度預估 */
+  acidity: string
+  /** 質地與抗凍力／硬度評估 */
+  texture: string
+  /** 建議上桌溫度 */
+  servingTemp: string
+  /** 配方風險提醒 */
+  risks: string[]
+  /** 具體優化建議 */
+  optimizations: string[]
+  /** 風味搭配建議 */
+  pairings: string[]
+  /** 變化版本建議 */
+  variations: string[]
+  /** 一段給客人看的菜單描述 */
+  menuDescription: string
+  generatedAt: string
+  model: string
+}
+
 /** A named, frozen snapshot of a computed recipe ("儲存配方"). `inputs`/`result` are the
  *  exact RecipeInputs/RecipeResult at save time — not ingredient ids — so the saved
  *  numbers never drift if the underlying ingredient data is edited or deleted later. */
@@ -171,5 +201,7 @@ export interface SavedRecipe {
   name: string
   inputs: RecipeInputs
   result: RecipeResult
+  /** Cached AI 風味分析; null until the user runs it on the 已儲存配方 page. */
+  aiAnalysis: RecipeAiAnalysis | null
   createdAt: string
 }
