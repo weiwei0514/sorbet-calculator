@@ -93,7 +93,10 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
             <li
               key={ing.id}
               className="overflow-hidden rounded-lg border"
-              style={{ borderColor: 'var(--rule)', background: expanded ? 'var(--rule)' : 'transparent' }}
+              style={{
+                borderColor: expanded ? 'var(--accent)' : 'var(--rule)',
+                background: expanded ? 'color-mix(in oklab, var(--accent) 8%, transparent)' : 'transparent',
+              }}
             >
               <button
                 onClick={() => onToggleExpanded(ing.id)}
