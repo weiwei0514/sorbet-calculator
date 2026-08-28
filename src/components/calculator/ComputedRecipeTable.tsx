@@ -8,11 +8,11 @@ function fmt(n: number) {
   return n.toLocaleString('zh-TW', { maximumFractionDigits: 1, minimumFractionDigits: 1 })
 }
 
-// The composition bar's legend above already conveys the role (fruit/other sugar) via
-// color + swatch label, so the table row can drop the "水果："/"其他糖類：" prefix and
-// stay compact on narrow screens.
+// The composition bar's legend above already conveys the role (fruit/other sugar/其他) via
+// color + swatch label, so the table row can drop the "水果："/"其他糖類："/"其他：" prefix
+// and stay compact on narrow screens.
 function shortLabel(label: string) {
-  return label.replace(/^水果：|^其他糖類：/, '')
+  return label.replace(/^水果：|^其他糖類：|^其他：/, '')
 }
 
 export function ComputedRecipeTable({

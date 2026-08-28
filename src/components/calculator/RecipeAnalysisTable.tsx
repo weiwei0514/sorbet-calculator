@@ -72,6 +72,14 @@ export function RecipeAnalysisTable({ result }: { result: RecipeResult }) {
           target={comparison.otherSugarPct.target}
           axisMax={Math.max(comparison.otherSugarPct.target * 1.6, 1)}
         />
+        {comparison.otherPct != null && comparison.otherPct.target > 0 && (
+          <RangeBar
+            label="其他比例"
+            actual={comparison.otherPct.actual}
+            target={comparison.otherPct.target}
+            axisMax={Math.max(comparison.otherPct.target * 1.6, 1)}
+          />
+        )}
         <RangeBar
           label="膠體比例"
           actual={comparison.stabilizerPct.actual}

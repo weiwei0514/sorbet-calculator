@@ -3,6 +3,7 @@
 export const COMPONENT_COLOR_VAR: Record<string, string> = {
   fruit: 'var(--series-fruit)',
   otherSugar: 'var(--series-other-sugar)',
+  other: 'var(--series-other)',
   stabilizer: 'var(--series-stabilizer)',
   sucrose: 'var(--series-sucrose)',
   water: 'var(--series-water)',

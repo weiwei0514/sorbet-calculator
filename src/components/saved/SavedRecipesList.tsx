@@ -17,7 +17,7 @@ function fmt(n: number, digits = 1) {
 }
 
 function shortLabel(label: string) {
-  return label.replace(/^水果：|^其他糖類：/, '')
+  return label.replace(/^水果：|^其他糖類：|^其他：/, '')
 }
 
 function formatDate(iso: string) {

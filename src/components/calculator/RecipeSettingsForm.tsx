@@ -8,10 +8,11 @@ interface RecipeSettingsFormProps {
   inputs: RecipeInputs
   fruits: Ingredient[]
   otherSugars: Ingredient[]
+  others: Ingredient[]
   onChange: (patch: Partial<RecipeInputs>) => void
 }
 
-export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: RecipeSettingsFormProps) {
+export function RecipeSettingsForm({ inputs, fruits, otherSugars, others, onChange }: RecipeSettingsFormProps) {
   return (
     <Section eyebrow="Recipe Setup" title="配方設定">
       <div className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
@@ -55,6 +56,18 @@ export function RecipeSettingsForm({ inputs, fruits, otherSugars, onChange }: Re
           emptyLabel="尚無其他糖類資料"
           rangeUnitLabel="其他糖類比例總和"
           newRowDefaultPct={1}
+        />
+
+        <IngredientAmountRows
+          title="其他（辛香料、茶粉、乳製品…）"
+          rows={inputs.others}
+          options={others}
+          onChange={(rows: IngredientAmount[]) => onChange({ others: rows })}
+          addLabel="+ 新增其他食材"
+          emptyLabel="尚無「其他」分類食材，請先到食材資料庫新增"
+          rangeUnitLabel="其他比例總和"
+          newRowDefaultPct={0.5}
+          allowEmpty
         />
 
         <PercentField

@@ -14,6 +14,8 @@ interface IngredientAmountRowsProps {
   rangeUnitLabel: string
   newRowDefaultPct: number
   showRecommendedHint?: boolean
+  /** Optional section — allow removing every row down to none (default keeps at least 1). */
+  allowEmpty?: boolean
 }
 
 function fmt(n: number) {
@@ -32,6 +34,7 @@ export function IngredientAmountRows({
   rangeUnitLabel,
   newRowDefaultPct,
   showRecommendedHint = false,
+  allowEmpty = false,
 }: IngredientAmountRowsProps) {
   const total = rows.reduce((sum, r) => sum + r.pct, 0)
   const hasRange = rangeMin != null && rangeMax != null
@@ -48,6 +51,8 @@ export function IngredientAmountRows({
   function addRow() {
     onChange([...rows, { ingredientId: options[0]?.id ?? '', pct: newRowDefaultPct }])
   }
+
+  const canRemoveRow = allowEmpty || rows.length > 1
 
   return (
     <div className="flex flex-col gap-4 sm:col-span-2">
@@ -98,7 +103,7 @@ export function IngredientAmountRows({
                     %
                   </span>
                 </div>
-                {rows.length > 1 && (
+                {canRemoveRow && (
                   <button
                     type="button"
                     onClick={() => removeRow(i)}
@@ -119,7 +124,13 @@ export function IngredientAmountRows({
         })}
       </div>
 
-      <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={addRow}>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full sm:w-auto"
+        onClick={addRow}
+        disabled={allowEmpty && options.length === 0}
+      >
         {addLabel}
       </Button>
     </div>

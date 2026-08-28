@@ -32,4 +32,6 @@ export const DEMO_INGREDIENTS: Ingredient[] = [
   { id: 'demo-trehalose', name: '海藻糖', category: 'other_sugar', waterPct: 10, sugarPct: 90, fatPct: 0, nonFatSolidsPct: 0, otherSolidsPct: 0, totalSolidsPct: 90, recommendedMinPct: null, recommendedMaxPct: null, podCoefficient: 0.45, pacCoefficient: 0.45 },
   { id: 'demo-invert-sugar', name: '轉化糖', category: 'other_sugar', waterPct: 25, sugarPct: 75, fatPct: 0, nonFatSolidsPct: 0, otherSolidsPct: 0, totalSolidsPct: 75, recommendedMinPct: null, recommendedMaxPct: null, podCoefficient: null, pacCoefficient: null },
   { id: 'demo-maltodextrin', name: '麥芽糊精', category: 'other_sugar', waterPct: 4, sugarPct: 96, fatPct: 0, nonFatSolidsPct: 0, otherSolidsPct: 0, totalSolidsPct: 96, recommendedMinPct: null, recommendedMaxPct: null, podCoefficient: null, pacCoefficient: null },
+  { id: 'demo-matcha', name: '抹茶粉', category: 'other', waterPct: 5, sugarPct: 0, fatPct: 5, nonFatSolidsPct: 0, otherSolidsPct: 90, totalSolidsPct: 95, recommendedMinPct: null, recommendedMaxPct: null, podCoefficient: null, pacCoefficient: null },
+  { id: 'demo-cinnamon', name: '肉桂粉', category: 'other', waterPct: 10, sugarPct: 3, fatPct: 1, nonFatSolidsPct: 0, otherSolidsPct: 86, totalSolidsPct: 90, recommendedMinPct: null, recommendedMaxPct: null, podCoefficient: null, pacCoefficient: null },
 ]

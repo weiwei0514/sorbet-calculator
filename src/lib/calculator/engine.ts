@@ -21,6 +21,8 @@ export interface CalculateRecipeArgs {
   inputs: RecipeInputs
   fruits: WeightedIngredient[]
   otherSugars: WeightedIngredient[]
+  /** 選填「其他」分類（辛香料／茶粉等）。省略時視為空。 */
+  others?: WeightedIngredient[]
   config?: EngineConfig
 }
 
@@ -31,12 +33,13 @@ export type CalculationOutcome =
 const EPSILON = 1e-9
 
 export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
-  const { inputs, fruits, otherSugars, config = DEFAULT_ENGINE_CONFIG } = args
+  const { inputs, fruits, otherSugars, others = [], config = DEFAULT_ENGINE_CONFIG } = args
 
   const errors: ValidationError[] = [
     ...validateRecipeInputs(inputs),
     ...fruits.flatMap((f) => validateIngredientComposition(f.ingredient)),
     ...otherSugars.flatMap((s) => validateIngredientComposition(s.ingredient)),
+    ...others.flatMap((o) => validateIngredientComposition(o.ingredient)),
   ]
   if (errors.length > 0) return { ok: false, result: null, errors }
 
@@ -55,6 +58,9 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
       totalWeightG
     )
   )
+  const otherComps = others.map(({ ingredient, pct }) =>
+    componentFrom(`other-${ingredient.id}`, 'other', `其他：${ingredient.name}`, totalWeightG * (pct / 100), ingredient, totalWeightG)
+  )
 
   const stabilizerWeightG = totalWeightG * (inputs.stabilizerPct / 100)
   const stabilizerComp = componentFrom(
@@ -68,7 +74,10 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
 
   const targetTotalSolidsG = totalWeightG * (inputs.targetTotalSolidsPct / 100)
   const knownSolidsG =
-    sumBy(fruitComps, (c) => c.totalSolidsG) + sumBy(otherSugarComps, (c) => c.totalSolidsG) + stabilizerComp.totalSolidsG
+    sumBy(fruitComps, (c) => c.totalSolidsG) +
+    sumBy(otherSugarComps, (c) => c.totalSolidsG) +
+    sumBy(otherComps, (c) => c.totalSolidsG) +
+    stabilizerComp.totalSolidsG
   const rawSucroseWeightG = targetTotalSolidsG - knownSolidsG
 
   if (rawSucroseWeightG < -EPSILON) {
@@ -82,7 +91,11 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
   const sucroseComp = componentFrom('sucrose', 'sucrose', config.sucrose.label, sucroseWeightG, config.sucrose, totalWeightG)
 
   const usedSoFarG =
-    sumBy(fruitComps, (c) => c.weightG) + sumBy(otherSugarComps, (c) => c.weightG) + stabilizerComp.weightG + sucroseComp.weightG
+    sumBy(fruitComps, (c) => c.weightG) +
+    sumBy(otherSugarComps, (c) => c.weightG) +
+    sumBy(otherComps, (c) => c.weightG) +
+    stabilizerComp.weightG +
+    sucroseComp.weightG
   const rawWaterWeightG = totalWeightG - usedSoFarG
 
   if (rawWaterWeightG < -EPSILON) {
@@ -90,7 +103,7 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
       field: 'waterWeight',
       code: 'INFEASIBLE_WATER',
       message:
-        '目前設定的水果、其他糖類、膠體與砂糖總重已超過配方總重，無法補水，請降低水果比例、其他糖類比例或膠體比例',
+        '目前設定的水果、其他糖類、其他、膠體與砂糖總重已超過配方總重，無法補水，請降低水果比例、其他糖類比例、其他比例或膠體比例',
     })
   }
   const waterWeightG = Math.max(0, rawWaterWeightG)
@@ -105,17 +118,31 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
 
   if (errors.length > 0) return { ok: false, result: null, errors }
 
-  const components: ComponentBreakdown[] = [...fruitComps, ...otherSugarComps, stabilizerComp, sucroseComp, waterComp]
+  const components: ComponentBreakdown[] = [
+    ...fruitComps,
+    ...otherSugarComps,
+    ...otherComps,
+    stabilizerComp,
+    sucroseComp,
+    waterComp,
+  ]
   const totals = sumTotals(components, totalWeightG)
 
-  const missingCoefficientIngredientNames: string[] = [...fruits, ...otherSugars]
-    .filter(({ ingredient }) => ingredient.podCoefficient == null || ingredient.pacCoefficient == null)
+  // Only a sugar-bearing ingredient can have an incomplete POD/PAC total — a sugar-free
+  // 其他 (e.g. 肉桂粉) contributes 0 no matter what, so a missing coefficient there is harmless.
+  const missingCoefficientIngredientNames: string[] = [...fruits, ...otherSugars, ...others]
+    .filter(
+      ({ ingredient }) =>
+        ingredient.sugarPct > 0 && (ingredient.podCoefficient == null || ingredient.pacCoefficient == null)
+    )
     .map(({ ingredient }) => ingredient.name)
 
   const totalFruitPct = sumBy(fruits, (f) => f.pct)
   const totalOtherSugarPct = sumBy(otherSugars, (s) => s.pct)
+  const totalOtherPct = sumBy(others, (o) => o.pct)
   const actualFruitPct = sumBy(fruitComps, (c) => c.pctOfTotalWeight)
   const actualOtherSugarPct = sumBy(otherSugarComps, (c) => c.pctOfTotalWeight)
+  const actualOtherPct = sumBy(otherComps, (c) => c.pctOfTotalWeight)
 
   const result: RecipeResult = {
     inputs,
@@ -125,6 +152,7 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
       totalSolidsPct: compare(inputs.targetTotalSolidsPct, totals.totalSolidsPct),
       fruitPct: compare(totalFruitPct, actualFruitPct),
       otherSugarPct: compare(totalOtherSugarPct, actualOtherSugarPct),
+      otherPct: compare(totalOtherPct, actualOtherPct),
       stabilizerPct: compare(inputs.stabilizerPct, stabilizerComp.pctOfTotalWeight),
     },
     podTarget: inputs.targetPOD == null ? null : podPacTarget(inputs.targetPOD, totals.totalPOD),

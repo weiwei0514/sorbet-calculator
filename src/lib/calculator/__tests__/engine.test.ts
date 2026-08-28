@@ -67,7 +67,24 @@ const trehalose: Ingredient = {
   pacCoefficient: 0.45,
 }
 
-const POOL = [strawberry, mango, glucosePowder, trehalose]
+// 「其他」分類 — 無糖香料，只貢獻其他固形物。
+const matcha: Ingredient = {
+  id: 'matcha',
+  name: '抹茶粉',
+  category: 'other',
+  waterPct: 5,
+  sugarPct: 0,
+  fatPct: 5,
+  nonFatSolidsPct: 0,
+  otherSolidsPct: 90,
+  totalSolidsPct: 95,
+  recommendedMinPct: null,
+  recommendedMaxPct: null,
+  podCoefficient: null,
+  pacCoefficient: null,
+}
+
+const POOL = [strawberry, mango, glucosePowder, trehalose, matcha]
 
 function toWeighted(rows: IngredientAmount[], pool: Ingredient[] = POOL): WeightedIngredient[] {
   return rows.flatMap((r) => {
@@ -82,13 +99,19 @@ const baseInputs: RecipeInputs = {
   targetTotalSolidsPct: 30,
   stabilizerPct: 0.5,
   otherSugars: [{ ingredientId: glucosePowder.id, pct: 3 }],
+  others: [],
   targetPOD: null,
   targetPAC: null,
 }
 
 function run(inputsOverride: Partial<RecipeInputs> = {}) {
   const inputs: RecipeInputs = { ...baseInputs, ...inputsOverride }
-  return calculateRecipe({ inputs, fruits: toWeighted(inputs.fruits), otherSugars: toWeighted(inputs.otherSugars) })
+  return calculateRecipe({
+    inputs,
+    fruits: toWeighted(inputs.fruits),
+    otherSugars: toWeighted(inputs.otherSugars),
+    others: toWeighted(inputs.others),
+  })
 }
 
 describe('calculateRecipe — spec worked example', () => {
@@ -331,5 +354,51 @@ describe('calculateRecipe — POD/PAC', () => {
     // At exactly 1000g, per-1000g equals the total (spec's own worked example: 1000g -> POD 235.8 both ways).
     expect(at1000g.result.totals.podPer1000g).toBeCloseTo(at1000g.result.totals.totalPOD, 6)
     expect(at1000g.result.totals.pacPer1000g).toBeCloseTo(at1000g.result.totals.totalPAC, 6)
+  })
+})
+
+describe('calculateRecipe — 「其他」分類（辛香料／茶粉等）', () => {
+  it('defaults to no 其他 rows and emits an all-zero otherPct comparison', () => {
+    const outcome = run()
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+    expect(outcome.result.components.some((c) => c.category === 'other')).toBe(false)
+    expect(outcome.result.comparison.otherPct.target).toBeCloseTo(0, 6)
+    expect(outcome.result.comparison.otherPct.actual).toBeCloseTo(0, 6)
+  })
+
+  it('adds a 其他 component, counts its solids toward the target, and shrinks sucrose by the same amount', () => {
+    const withoutMatcha = run()
+    const withMatcha = run({ others: [{ ingredientId: matcha.id, pct: 2 }] })
+    expect(withoutMatcha.ok && withMatcha.ok).toBe(true)
+    if (!withoutMatcha.ok || !withMatcha.ok) return
+
+    const matchaComp = withMatcha.result.components.find((c) => c.key === 'other-matcha')!
+    expect(matchaComp.category).toBe('other')
+    expect(matchaComp.label).toBe('其他：抹茶粉')
+    // 1000g * 2% = 20g; 95% solids -> 19g solids.
+    expect(matchaComp.weightG).toBeCloseTo(20, 6)
+    expect(matchaComp.totalSolidsG).toBeCloseTo(19, 6)
+
+    // Target total solids is unchanged, so sucrose drops by matcha's solids contribution.
+    const sucroseBefore = withoutMatcha.result.components.find((c) => c.key === 'sucrose')!.weightG
+    const sucroseAfter = withMatcha.result.components.find((c) => c.key === 'sucrose')!.weightG
+    expect(sucroseBefore - sucroseAfter).toBeCloseTo(19, 6)
+    expect(withMatcha.result.totals.totalSolidsPct).toBeCloseTo(withoutMatcha.result.totals.totalSolidsPct, 6)
+    expect(withMatcha.result.comparison.otherPct.actual).toBeCloseTo(2, 6)
+  })
+
+  it('a sugar-free 其他 with no coefficients is NOT flagged as missing POD/PAC', () => {
+    const outcome = run({ others: [{ ingredientId: matcha.id, pct: 1 }] })
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+    expect(outcome.result.missingCoefficientIngredientNames).not.toContain('抹茶粉')
+  })
+
+  it('rejects a 其他 row with a non-positive percentage', () => {
+    const outcome = run({ others: [{ ingredientId: matcha.id, pct: 0 }] })
+    expect(outcome.ok).toBe(false)
+    if (outcome.ok) return
+    expect(outcome.errors.some((e) => e.field === 'others')).toBe(true)
   })
 })

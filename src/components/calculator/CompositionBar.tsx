@@ -38,7 +38,7 @@ export function CompositionBar({ components }: { components: ComponentBreakdown[
               className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
               style={{ background: componentColor(c.category) }}
             />
-            <span>{c.label.replace(/^水果：|^其他糖類：/, '')}</span>
+            <span>{c.label.replace(/^水果：|^其他糖類：|^其他：/, '')}</span>
             <span className="tabular" style={{ color: 'var(--faint)' }}>
               {fmt(c.weightG)}g · {fmt(c.pctOfTotalWeight)}%
             </span>

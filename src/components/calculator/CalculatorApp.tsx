@@ -10,7 +10,7 @@ import { PodPacPanel } from './PodPacPanel'
 import { ErrorBanner } from './ErrorBanner'
 import { SaveRecipeButton } from './SaveRecipeButton'
 
-const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruits' | 'otherSugars'> = {
+const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruits' | 'otherSugars' | 'others'> = {
   totalWeightG: 1000,
   targetTotalSolidsPct: 30,
   stabilizerPct: 0.5,
@@ -46,11 +46,14 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
     () => initialIngredients.filter((i) => i.category === 'other_sugar'),
     [initialIngredients]
   )
+  const others = useMemo(() => initialIngredients.filter((i) => i.category === 'other'), [initialIngredients])
 
   const [inputs, setInputs] = useState<RecipeInputs>(() => ({
     ...DEFAULT_INPUTS,
     fruits: [{ ingredientId: initialIngredients.find((i) => i.category === 'fruit')?.id ?? '', pct: 40 }],
     otherSugars: [{ ingredientId: initialIngredients.find((i) => i.category === 'other_sugar')?.id ?? '', pct: 3 }],
+    // 「其他」預設留空 — 使用者要用時自己新增。
+    others: [],
   }))
 
   function handleInputsChange(patch: Partial<RecipeInputs>) {
@@ -65,15 +68,22 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
       ...inputs,
       fruits: sanitizeRows(inputs.fruits, fruits),
       otherSugars: sanitizeRows(inputs.otherSugars, otherSugars),
+      others: sanitizeRows(inputs.others, others),
     }),
-    [inputs, fruits, otherSugars]
+    [inputs, fruits, otherSugars, others]
   )
 
   const outcome = useMemo(() => {
     const resolvedFruits = resolveRows(effectiveInputs.fruits, fruits)
     const resolvedOtherSugars = resolveRows(effectiveInputs.otherSugars, otherSugars)
-    return calculateRecipe({ inputs: effectiveInputs, fruits: resolvedFruits, otherSugars: resolvedOtherSugars })
-  }, [effectiveInputs, fruits, otherSugars])
+    const resolvedOthers = resolveRows(effectiveInputs.others, others)
+    return calculateRecipe({
+      inputs: effectiveInputs,
+      fruits: resolvedFruits,
+      otherSugars: resolvedOtherSugars,
+      others: resolvedOthers,
+    })
+  }, [effectiveInputs, fruits, otherSugars, others])
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10 sm:gap-14 sm:px-6 sm:py-16 lg:px-10">
@@ -105,6 +115,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
             inputs={effectiveInputs}
             fruits={fruits}
             otherSugars={otherSugars}
+            others={others}
             onChange={handleInputsChange}
           />
         </div>

@@ -80,6 +80,9 @@ export interface RecipeInputs {
   stabilizerPct: number
   /** One or more "other sugar" ingredients — the 1–5% hard limit applies to their SUM. */
   otherSugars: IngredientAmount[]
+  /** Optional "其他" ingredients — 辛香料、茶粉 等，通常只佔配方的一點點。可為空。
+   *  用量由使用者指定（同 otherSugars 的處理方式），其固形物會計入總固形物、糖分會計入 POD/PAC。 */
+  others: IngredientAmount[]
   /** Optional POD/PAC targets for the reverse-adjustment hint. Null = not set, hide the gap section. */
   targetPOD: number | null
   targetPAC: number | null
@@ -89,7 +92,7 @@ export interface RecipeInputs {
  *  fruits each get their own key); `category` is what identity/color/filtering keys off. */
 export interface ComponentBreakdown {
   key: string
-  category: 'fruit' | 'otherSugar' | 'stabilizer' | 'sucrose' | 'water'
+  category: 'fruit' | 'otherSugar' | 'other' | 'stabilizer' | 'sucrose' | 'water'
   label: string
   weightG: number
   waterG: number
@@ -146,6 +149,8 @@ export interface RecipeResult {
     totalSolidsPct: TargetVsActual
     fruitPct: TargetVsActual
     otherSugarPct: TargetVsActual
+    /** 「其他」比例。舊的已儲存配方快照沒有這個欄位 — 顯示端需自行判斷是否為 undefined。 */
+    otherPct: TargetVsActual
     stabilizerPct: TargetVsActual
   }
   podTarget: PodPacTarget | null

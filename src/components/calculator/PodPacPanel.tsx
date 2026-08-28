@@ -69,7 +69,11 @@ export function PodPacPanel({ result, sugarCandidates, onTargetChange }: PodPacP
   const { totals, podTarget, pacTarget, missingCoefficientIngredientNames, inputs } = result
 
   const sugarComponents = result.components.filter(
-    (c) => c.category === 'fruit' || c.category === 'otherSugar' || c.category === 'sucrose'
+    (c) =>
+      c.category === 'fruit' ||
+      c.category === 'otherSugar' ||
+      c.category === 'other' ||
+      c.category === 'sucrose'
   )
 
   const suggestions = suggestSugarAdjustments(result, sugarCandidates)

@@ -66,6 +66,9 @@ export function buildRecipeAnalysisPrompt(recipe: SavedRecipe): string {
   lines.push(cmp('總固形物', comparison.totalSolidsPct))
   lines.push(cmp('水果比例', comparison.fruitPct))
   lines.push(cmp('其他糖類比例', comparison.otherSugarPct))
+  if (comparison.otherPct != null && comparison.otherPct.target > 0) {
+    lines.push(cmp('其他（辛香料／茶粉等）比例', comparison.otherPct))
+  }
   lines.push(cmp('膠體比例', comparison.stabilizerPct))
 
   lines.push('')

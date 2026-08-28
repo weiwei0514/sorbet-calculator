@@ -48,6 +48,17 @@ export function validateRecipeInputs(inputs: RecipeInputs): ValidationError[] {
     // No sum-range check here on purpose — 其他糖類比例總和 is unrestricted (per user request).
   }
 
+  // 「其他」— 選填分類（辛香料／茶粉等）。可為空；有列就要求比例 > 0，總和不設限。
+  ;(inputs.others ?? []).forEach((o, i) => {
+    if (!(o.pct > 0)) {
+      errors.push({
+        field: 'others',
+        code: 'OUT_OF_RANGE',
+        message: `第 ${i + 1} 項「其他」比例需大於 0（目前為 ${o.pct}%）`,
+      })
+    }
+  })
+
   if (inputs.stabilizerPct < 0) {
     errors.push({
       field: 'stabilizerPct',

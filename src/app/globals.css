@@ -25,6 +25,8 @@
   --series-stabilizer: #0d9488;
   --series-sucrose: #c2903f;
   --series-water: #3a7fc4;
+  /* 「其他」— 辛香料／茶粉等。Muted indigo — distinct from the fruit magenta and the water blue. */
+  --series-other: #6b5b95;
   /* Ingredient composition bar only (IngredientCompositionBar) — validated as part of
      the 5-color water/sugar/fat/non-fat-solids/other-solids set, adjacent pairs. */
   --series-fat: #a13d1e;
