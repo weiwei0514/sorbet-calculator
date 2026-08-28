@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Ingredient, IngredientCategory, IngredientInput, ValidationError } from '@/lib/calculator/types'
+import { INGREDIENT_CATEGORIES } from '@/lib/calculator/types'
 import { validateIngredientComposition } from '@/lib/calculator/validate'
 import { Button } from '@/components/ui/Button'
 
@@ -9,11 +10,6 @@ interface IngredientFormProps {
   initial?: Ingredient | null
   onSubmit: (input: IngredientInput) => Promise<void>
   onCancel?: () => void
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-  fruit: '水果',
-  other_sugar: '其他糖類',
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -31,6 +27,8 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
   const [category, setCategory] = useState<IngredientCategory>(initial?.category ?? 'fruit')
   const [waterPct, setWaterPct] = useState(initial?.waterPct ?? 0)
   const [sugarPct, setSugarPct] = useState(initial?.sugarPct ?? 0)
+  const [fatPct, setFatPct] = useState(initial?.fatPct ?? 0)
+  const [nonFatSolidsPct, setNonFatSolidsPct] = useState(initial?.nonFatSolidsPct ?? 0)
   const [otherSolidsPct, setOtherSolidsPct] = useState(initial?.otherSolidsPct ?? 0)
   const [recommendedMinPct, setRecommendedMinPct] = useState(initial?.recommendedMinPct?.toString() ?? '')
   const [recommendedMaxPct, setRecommendedMaxPct] = useState(initial?.recommendedMaxPct?.toString() ?? '')
@@ -39,7 +37,7 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [submitting, setSubmitting] = useState(false)
 
-  const totalSolidsPct = sugarPct + otherSolidsPct
+  const totalSolidsPct = sugarPct + fatPct + nonFatSolidsPct + otherSolidsPct
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -48,6 +46,8 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
       category,
       waterPct,
       sugarPct,
+      fatPct,
+      nonFatSolidsPct,
       otherSolidsPct,
       recommendedMinPct: recommendedMinPct.trim() === '' ? null : Number(recommendedMinPct),
       recommendedMaxPct: recommendedMaxPct.trim() === '' ? null : Number(recommendedMaxPct),
@@ -96,8 +96,11 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
             style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
             className={inputClass}
           >
-            <option value="fruit">{CATEGORY_LABELS.fruit}</option>
-            <option value="other_sugar">{CATEGORY_LABELS.other_sugar}</option>
+            {INGREDIENT_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -120,6 +123,30 @@ export function IngredientForm({ initial, onSubmit, onCancel }: IngredientFormPr
             step={0.1}
             value={sugarPct}
             onChange={(e) => setSugarPct(e.target.valueAsNumber)}
+            style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+            className={`tabular ${inputClass}`}
+          />
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>油脂 %</FieldLabel>
+          <input
+            type="number"
+            step={0.1}
+            value={fatPct}
+            onChange={(e) => setFatPct(e.target.valueAsNumber)}
+            style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+            className={`tabular ${inputClass}`}
+          />
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>無脂固形物 %</FieldLabel>
+          <input
+            type="number"
+            step={0.1}
+            value={nonFatSolidsPct}
+            onChange={(e) => setNonFatSolidsPct(e.target.valueAsNumber)}
             style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
             className={`tabular ${inputClass}`}
           />

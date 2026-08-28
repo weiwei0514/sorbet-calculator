@@ -13,6 +13,8 @@ function toRowInput(input: IngredientInput) {
     category: input.category,
     water_pct: input.waterPct,
     sugar_pct: input.sugarPct,
+    fat_pct: input.fatPct,
+    non_fat_solids_pct: input.nonFatSolidsPct,
     other_solids_pct: input.otherSolidsPct,
     recommended_min_pct: input.recommendedMinPct,
     recommended_max_pct: input.recommendedMaxPct,

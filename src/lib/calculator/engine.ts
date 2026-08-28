@@ -99,7 +99,7 @@ export function calculateRecipe(args: CalculateRecipeArgs): CalculationOutcome {
     'water',
     '水',
     waterWeightG,
-    { waterPct: 100, sugarPct: 0, otherSolidsPct: 0, podCoefficient: 0, pacCoefficient: 0 },
+    { waterPct: 100, sugarPct: 0, fatPct: 0, nonFatSolidsPct: 0, otherSolidsPct: 0, podCoefficient: 0, pacCoefficient: 0 },
     totalWeightG
   )
 
@@ -150,6 +150,8 @@ function componentFrom(
 ): ComponentBreakdown {
   const waterG = weightG * (comp.waterPct / 100)
   const sugarG = weightG * (comp.sugarPct / 100)
+  const fatG = weightG * (comp.fatPct / 100)
+  const nonFatSolidsG = weightG * (comp.nonFatSolidsPct / 100)
   const otherSolidsG = weightG * (comp.otherSolidsPct / 100)
   // POD/PAC coefficients are already decimals (0.45), never divide by 100 — only sugarPct needs the /100 conversion.
   const podContributionG = sugarG * (comp.podCoefficient ?? 0)
@@ -162,7 +164,11 @@ function componentFrom(
     waterG,
     sugarG,
     otherSolidsG,
-    totalSolidsG: sugarG + otherSolidsG,
+    // Fat/non-fat-solids fold into totalSolidsG (they're solids) but aren't broken out as
+    // their own ComponentBreakdown fields yet — today every fruit/other_sugar ingredient
+    // has both at 0, so this is a no-op now and just keeps the solids balance correct once
+    // a future Gelato mode passes dairy/chocolate-style ingredients through here.
+    totalSolidsG: sugarG + fatG + nonFatSolidsG + otherSolidsG,
     pctOfTotalWeight: totalWeightG > 0 ? (weightG / totalWeightG) * 100 : 0,
     podCoefficient: comp.podCoefficient,
     pacCoefficient: comp.pacCoefficient,
@@ -178,15 +184,18 @@ function sumTotals(components: ComponentBreakdown[], totalWeightG: number): Reci
       waterG: a.waterG + c.waterG,
       sugarG: a.sugarG + c.sugarG,
       otherSolidsG: a.otherSolidsG + c.otherSolidsG,
+      // Summed directly from each component's own totalSolidsG (which already includes
+      // fat/non-fat-solids) rather than re-derived from sugarG+otherSolidsG here — otherwise
+      // fat/non-fat-solids contributions would silently vanish at the aggregate level.
+      totalSolidsG: a.totalSolidsG + c.totalSolidsG,
       totalPOD: a.totalPOD + c.podContributionG,
       totalPAC: a.totalPAC + c.pacContributionG,
     }),
-    { weightG: 0, waterG: 0, sugarG: 0, otherSolidsG: 0, totalPOD: 0, totalPAC: 0 }
+    { weightG: 0, waterG: 0, sugarG: 0, otherSolidsG: 0, totalSolidsG: 0, totalPOD: 0, totalPAC: 0 }
   )
-  const totalSolidsG = acc.sugarG + acc.otherSolidsG
+  const { totalSolidsG } = acc
   return {
     ...acc,
-    totalSolidsG,
     waterPct: (acc.waterG / totalWeightG) * 100,
     sugarPct: (acc.sugarG / totalWeightG) * 100,
     otherSolidsPct: (acc.otherSolidsG / totalWeightG) * 100,

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Ingredient, IngredientInput } from '@/lib/calculator/types'
+import type { Ingredient, IngredientCategory, IngredientInput } from '@/lib/calculator/types'
+import { INGREDIENT_CATEGORIES } from '@/lib/calculator/types'
 import { createClient } from '@/lib/supabase/client'
 import { extractSupabaseMessage } from '@/lib/supabase/errors'
 import { createIngredient, deleteIngredient, updateIngredient } from '@/lib/ingredients/mutations'
@@ -17,10 +18,9 @@ interface IngredientManagerProps {
   onIngredientsChange: (ingredients: Ingredient[]) => void
 }
 
-const CATEGORY_TABS: { value: 'all' | 'fruit' | 'other_sugar'; label: string }[] = [
+const CATEGORY_TABS: { value: 'all' | IngredientCategory; label: string }[] = [
   { value: 'all', label: '全部' },
-  { value: 'fruit', label: '水果' },
-  { value: 'other_sugar', label: '其他糖類' },
+  ...INGREDIENT_CATEGORIES,
 ]
 
 const NOT_CONFIGURED_MESSAGE =
@@ -39,7 +39,7 @@ function getSupabaseClientOrNull(): SupabaseClient | null {
 
 export function IngredientManager({ ingredients, onIngredientsChange }: IngredientManagerProps) {
   const [search, setSearch] = useState('')
-  const [categoryTab, setCategoryTab] = useState<'all' | 'fruit' | 'other_sugar'>('all')
+  const [categoryTab, setCategoryTab] = useState<'all' | IngredientCategory>('all')
   const [editing, setEditing] = useState<Ingredient | null>(null)
   const [adding, setAdding] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)

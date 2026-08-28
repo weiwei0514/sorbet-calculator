@@ -25,6 +25,10 @@
   --series-stabilizer: #0d9488;
   --series-sucrose: #c2903f;
   --series-water: #3a7fc4;
+  /* Ingredient composition bar only (IngredientCompositionBar) — validated as part of
+     the 5-color water/sugar/fat/non-fat-solids/other-solids set, adjacent pairs. */
+  --series-fat: #a13d1e;
+  --series-non-fat-solids: #8a5a9e;
 
   --background: var(--bg);
   --foreground: var(--ink);

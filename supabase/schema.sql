@@ -11,12 +11,18 @@
 CREATE TABLE IF NOT EXISTS ingredients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
+  -- fruit/other_sugar participate in the Sorbet calculator's dropdowns today;
+  -- chocolate/nut_paste/alcohol/other are shared-database-only for now (future Gelato mode).
   category TEXT NOT NULL DEFAULT 'fruit'
-    CHECK (category IN ('fruit', 'other_sugar')),
+    CHECK (category IN ('fruit', 'other_sugar', 'chocolate', 'nut_paste', 'alcohol', 'other')),
   water_pct NUMERIC(5,2) NOT NULL CHECK (water_pct >= 0 AND water_pct <= 100),
   sugar_pct NUMERIC(5,2) NOT NULL CHECK (sugar_pct >= 0 AND sugar_pct <= 100),
+  -- 油脂／無脂固形物 — needed for dairy/chocolate/nut-paste style ingredients (附表1).
+  -- Fruit and sugar entries are legitimately 0 for both.
+  fat_pct NUMERIC(5,2) NOT NULL DEFAULT 0 CHECK (fat_pct >= 0 AND fat_pct <= 100),
+  non_fat_solids_pct NUMERIC(5,2) NOT NULL DEFAULT 0 CHECK (non_fat_solids_pct >= 0 AND non_fat_solids_pct <= 100),
   other_solids_pct NUMERIC(5,2) NOT NULL CHECK (other_solids_pct >= 0 AND other_solids_pct <= 100),
-  total_solids_pct NUMERIC(5,2) GENERATED ALWAYS AS (sugar_pct + other_solids_pct) STORED,
+  total_solids_pct NUMERIC(5,2) GENERATED ALWAYS AS (sugar_pct + fat_pct + non_fat_solids_pct + other_solids_pct) STORED,
   -- Reference-book suggested fruit% range for this ingredient (informational hint only,
   -- does not affect the app's hard 25–60% validation). NULL when unknown.
   recommended_min_pct NUMERIC(5,2),
@@ -27,7 +33,7 @@ CREATE TABLE IF NOT EXISTS ingredients (
   pod_coefficient NUMERIC(6,3),
   pac_coefficient NUMERIC(6,3),
   CONSTRAINT composition_sums_to_100
-    CHECK (ABS(water_pct + sugar_pct + other_solids_pct - 100) <= 0.05),
+    CHECK (ABS(water_pct + sugar_pct + fat_pct + non_fat_solids_pct + other_solids_pct - 100) <= 0.05),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -1,11 +1,28 @@
 export type IngredientCategory = 'fruit' | 'other_sugar' | string
 
+/** Shared by the ingredient form's category dropdown and the database's filter tabs.
+ *  Only 'fruit'/'other_sugar' are wired into the Sorbet calculator's dropdowns today —
+ *  the rest are shared-database-only, laid in ahead of a future Gelato mode. */
+export const INGREDIENT_CATEGORIES = [
+  { value: 'fruit', label: '水果' },
+  { value: 'other_sugar', label: '其他糖類' },
+  { value: 'chocolate', label: '巧克力' },
+  { value: 'nut_paste', label: '堅果醬' },
+  { value: 'alcohol', label: '酒' },
+  { value: 'other', label: '其他' },
+] as const satisfies readonly { value: string; label: string }[]
+
 export interface Ingredient {
   id: string
   name: string
   category: IngredientCategory
   waterPct: number
   sugarPct: number
+  /** 油脂 — required (defaults to 0). Fruit/sugar entries are legitimately 0;
+   *  meaningful for dairy/chocolate/nut-paste style ingredients (附表1 reference table). */
+  fatPct: number
+  /** 無脂固形物 — required (defaults to 0), same reasoning as fatPct. */
+  nonFatSolidsPct: number
   otherSolidsPct: number
   totalSolidsPct: number
   /** Reference-book suggested fruit% range for this ingredient in a sorbet recipe.
@@ -24,6 +41,8 @@ export type IngredientInput = Pick<
   | 'category'
   | 'waterPct'
   | 'sugarPct'
+  | 'fatPct'
+  | 'nonFatSolidsPct'
   | 'otherSolidsPct'
   | 'recommendedMinPct'
   | 'recommendedMaxPct'
@@ -35,6 +54,8 @@ export type IngredientInput = Pick<
 export interface CompositionPct {
   waterPct: number
   sugarPct: number
+  fatPct: number
+  nonFatSolidsPct: number
   otherSolidsPct: number
 }
 

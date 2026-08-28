@@ -117,6 +117,8 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
                   <div className="grid grid-cols-3 gap-3">
                     <StatPair label="水分%" value={ing.waterPct.toFixed(1)} />
                     <StatPair label="糖分%" value={ing.sugarPct.toFixed(1)} />
+                    <StatPair label="油脂%" value={ing.fatPct.toFixed(1)} />
+                    <StatPair label="無脂固形物%" value={ing.nonFatSolidsPct.toFixed(1)} />
                     <StatPair label="其他固形物%" value={ing.otherSolidsPct.toFixed(1)} />
                     <StatPair label="總固形物%" value={ing.totalSolidsPct.toFixed(1)} />
                     <StatPair label="POD" value={fmtNullable(ing.podCoefficient)} />
@@ -141,6 +143,8 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
               <TH>組成</TH>
               <TH className="text-right">水分%</TH>
               <TH className="text-right">糖分%</TH>
+              <TH className="text-right">油脂%</TH>
+              <TH className="text-right">無脂固形物%</TH>
               <TH className="text-right">其他固形物%</TH>
               <TH className="text-right">總固形物%</TH>
               <TH className="text-right">POD</TH>
@@ -157,6 +161,8 @@ export function IngredientTable({ ingredients, onEdit, onDelete, expandedIds, on
                 </TD>
                 <TD className="tabular text-right">{ing.waterPct.toFixed(1)}</TD>
                 <TD className="tabular text-right">{ing.sugarPct.toFixed(1)}</TD>
+                <TD className="tabular text-right">{ing.fatPct.toFixed(1)}</TD>
+                <TD className="tabular text-right">{ing.nonFatSolidsPct.toFixed(1)}</TD>
                 <TD className="tabular text-right">{ing.otherSolidsPct.toFixed(1)}</TD>
                 <TD className="tabular text-right">{ing.totalSolidsPct.toFixed(1)}</TD>
                 <TD className="tabular text-right">{fmtNullable(ing.podCoefficient)}</TD>

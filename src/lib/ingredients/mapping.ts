@@ -6,6 +6,8 @@ export interface IngredientRow {
   category: string
   water_pct: number
   sugar_pct: number
+  fat_pct: number
+  non_fat_solids_pct: number
   other_solids_pct: number
   total_solids_pct: number
   recommended_min_pct: number | null
@@ -21,6 +23,10 @@ export function rowToIngredient(row: IngredientRow): Ingredient {
     category: row.category,
     waterPct: Number(row.water_pct),
     sugarPct: Number(row.sugar_pct),
+    // ?? 0 (not just Number()) — a table that hasn't run the fat_pct migration yet
+    // returns `undefined` for these keys; treat that the same as the DB column default.
+    fatPct: Number(row.fat_pct ?? 0),
+    nonFatSolidsPct: Number(row.non_fat_solids_pct ?? 0),
     otherSolidsPct: Number(row.other_solids_pct),
     totalSolidsPct: Number(row.total_solids_pct),
     recommendedMinPct: row.recommended_min_pct == null ? null : Number(row.recommended_min_pct),

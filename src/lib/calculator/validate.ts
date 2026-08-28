@@ -77,6 +77,8 @@ export function validateRecipeInputs(inputs: RecipeInputs): ValidationError[] {
 const COMPOSITION_FIELDS = [
   ['waterPct', '水分%'],
   ['sugarPct', '糖分%'],
+  ['fatPct', '油脂%'],
+  ['nonFatSolidsPct', '無脂固形物%'],
   ['otherSolidsPct', '其他固形物%'],
 ] as const
 
@@ -84,6 +86,8 @@ const COMPOSITION_FIELDS = [
 export function validateIngredientComposition(ing: {
   waterPct: number
   sugarPct: number
+  fatPct: number
+  nonFatSolidsPct: number
   otherSolidsPct: number
   podCoefficient?: number | null
   pacCoefficient?: number | null
@@ -101,12 +105,12 @@ export function validateIngredientComposition(ing: {
     }
   }
 
-  const sum = ing.waterPct + ing.sugarPct + ing.otherSolidsPct
+  const sum = ing.waterPct + ing.sugarPct + ing.fatPct + ing.nonFatSolidsPct + ing.otherSolidsPct
   if (Math.abs(sum - 100) > 0.05) {
     errors.push({
       field: 'composition',
       code: 'COMPOSITION_NOT_100',
-      message: `水分% + 糖分% + 其他固形物% 總和需等於 100%（目前為 ${sum.toFixed(2)}%）`,
+      message: `水分% + 糖分% + 油脂% + 無脂固形物% + 其他固形物% 總和需等於 100%（目前為 ${sum.toFixed(2)}%）`,
     })
   }
 

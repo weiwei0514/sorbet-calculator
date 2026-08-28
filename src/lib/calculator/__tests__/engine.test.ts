@@ -8,6 +8,8 @@ const strawberry: Ingredient = {
   category: 'fruit',
   waterPct: 87,
   sugarPct: 9,
+  fatPct: 0,
+  nonFatSolidsPct: 0,
   otherSolidsPct: 4,
   totalSolidsPct: 13,
   recommendedMinPct: 35,
@@ -22,6 +24,8 @@ const mango: Ingredient = {
   category: 'fruit',
   waterPct: 82,
   sugarPct: 15,
+  fatPct: 0,
+  nonFatSolidsPct: 0,
   otherSolidsPct: 3,
   totalSolidsPct: 18,
   recommendedMinPct: 40,
@@ -36,6 +40,8 @@ const glucosePowder: Ingredient = {
   category: 'other_sugar',
   waterPct: 19,
   sugarPct: 81,
+  fatPct: 0,
+  nonFatSolidsPct: 0,
   otherSolidsPct: 0,
   totalSolidsPct: 81,
   recommendedMinPct: null,
@@ -51,6 +57,8 @@ const trehalose: Ingredient = {
   category: 'other_sugar',
   waterPct: 0,
   sugarPct: 100,
+  fatPct: 0,
+  nonFatSolidsPct: 0,
   otherSolidsPct: 0,
   totalSolidsPct: 100,
   recommendedMinPct: null,
@@ -161,6 +169,51 @@ describe('calculateRecipe — spec worked example', () => {
     expect(outcome.ok).toBe(false)
     if (outcome.ok) return
     expect(outcome.errors.some((e) => e.code === 'COMPOSITION_NOT_100')).toBe(true)
+  })
+})
+
+describe('calculateRecipe — fat / non-fat-solids', () => {
+  it('folds fat and non-fat-solids into totalSolidsG and reduces sucrose accordingly', () => {
+    // A synthetic dairy-ish ingredient: 60% water, 10% sugar, 20% fat, 10% non-fat-solids, 0% other.
+    const creamyFruit: Ingredient = {
+      ...strawberry,
+      waterPct: 60,
+      sugarPct: 10,
+      fatPct: 20,
+      nonFatSolidsPct: 10,
+      otherSolidsPct: 0,
+      totalSolidsPct: 40,
+    }
+    const outcome = calculateRecipe({
+      inputs: { ...baseInputs, fruits: [{ ingredientId: creamyFruit.id, pct: 40 }] },
+      fruits: [{ ingredient: creamyFruit, pct: 40 }],
+      otherSugars: toWeighted(baseInputs.otherSugars),
+    })
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+
+    const fruitComp = outcome.result.components.find((c) => c.key === 'fruit-strawberry')!
+    // 400g at 10% sugar + 20% fat + 10% non-fat-solids -> 40 + 80 + 40 = 160g total solids,
+    // not just the 40g sugar would give if fat/non-fat-solids were dropped.
+    expect(fruitComp.totalSolidsG).toBeCloseTo(160, 6)
+
+    // That larger solids contribution must reduce the auto-computed sucrose vs. the plain
+    // strawberry case (52g solids at 40%) — proving totalSolidsG actually feeds the balance.
+    const sucrose = outcome.result.components.find((c) => c.key === 'sucrose')!
+    const plainOutcome = run()
+    expect(plainOutcome.ok).toBe(true)
+    if (!plainOutcome.ok) return
+    const plainSucrose = plainOutcome.result.components.find((c) => c.key === 'sucrose')!
+    expect(sucrose.weightG).toBeLessThan(plainSucrose.weightG)
+  })
+
+  it('is a no-op when fatPct/nonFatSolidsPct are 0 (every current fruit/other_sugar fixture)', () => {
+    const outcome = run()
+    expect(outcome.ok).toBe(true)
+    if (!outcome.ok) return
+    // Matches the untouched worked-example numbers exactly.
+    expect(outcome.result.components.find((c) => c.key === 'sucrose')!.weightG).toBeCloseTo(218.7, 6)
+    expect(outcome.result.totals.totalSolidsPct).toBeCloseTo(30, 6)
   })
 })
 
