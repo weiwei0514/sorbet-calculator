@@ -97,3 +97,27 @@ INSERT INTO ingredients (name, category, water_pct, sugar_pct, other_solids_pct,
   ('轉化糖',   'other_sugar', 25, 75, 0, NULL, NULL, NULL, NULL),
   ('麥芽糊精', 'other_sugar', 4,  96, 0, NULL, NULL, NULL, NULL)
 ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- Saved recipes — named, frozen snapshots of a computed recipe
+-- ("儲存配方" feature). inputs/result store the full RecipeInputs/
+-- RecipeResult JSON at save time, not just ingredient ids, so a
+-- saved recipe's numbers stay fixed even if ingredient data changes
+-- later.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS saved_recipes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  inputs JSONB NOT NULL,
+  result JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_saved_recipes_created_at ON saved_recipes (created_at DESC);
+
+ALTER TABLE saved_recipes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "anon_full_access_saved_recipes"
+  ON saved_recipes FOR ALL
+  USING (true)
+  WITH CHECK (true);

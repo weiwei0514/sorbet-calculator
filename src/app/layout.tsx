@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { Nav } from "@/components/layout/Nav";
 
 const displaySerif = Cormorant_Garamond({
   variable: "--font-display",
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="zh-Hant"
       className={`${displaySerif.variable} ${bodySans.variable} ${dataMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex">
+        <Nav />
+        <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
+      </body>
     </html>
   );
 }

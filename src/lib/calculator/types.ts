@@ -137,3 +137,14 @@ export interface ValidationError {
   code: string
   message: string
 }
+
+/** A named, frozen snapshot of a computed recipe ("儲存配方"). `inputs`/`result` are the
+ *  exact RecipeInputs/RecipeResult at save time — not ingredient ids — so the saved
+ *  numbers never drift if the underlying ingredient data is edited or deleted later. */
+export interface SavedRecipe {
+  id: string
+  name: string
+  inputs: RecipeInputs
+  result: RecipeResult
+  createdAt: string
+}

@@ -8,7 +8,7 @@ import { ComputedRecipeTable } from './ComputedRecipeTable'
 import { RecipeAnalysisTable } from './RecipeAnalysisTable'
 import { PodPacPanel } from './PodPacPanel'
 import { ErrorBanner } from './ErrorBanner'
-import { IngredientManager } from '@/components/ingredients/IngredientManager'
+import { SaveRecipeButton } from './SaveRecipeButton'
 
 const DEFAULT_INPUTS: Omit<RecipeInputs, 'fruits' | 'otherSugars'> = {
   totalWeightG: 1000,
@@ -38,10 +38,14 @@ function resolveRows(rows: IngredientAmount[], options: Ingredient[]): WeightedI
 }
 
 export function CalculatorApp({ initialIngredients, isDemo = false }: CalculatorAppProps) {
-  const [ingredients, setIngredients] = useState<Ingredient[]>(initialIngredients)
-
-  const fruits = useMemo(() => ingredients.filter((i) => i.category === 'fruit'), [ingredients])
-  const otherSugars = useMemo(() => ingredients.filter((i) => i.category === 'other_sugar'), [ingredients])
+  // Ingredient CRUD now lives on its own /ingredients page — this page only reads the
+  // list fetched at request time (Next.js re-fetches on navigation, so edits made there
+  // show up here automatically next time this page loads).
+  const fruits = useMemo(() => initialIngredients.filter((i) => i.category === 'fruit'), [initialIngredients])
+  const otherSugars = useMemo(
+    () => initialIngredients.filter((i) => i.category === 'other_sugar'),
+    [initialIngredients]
+  )
 
   const [inputs, setInputs] = useState<RecipeInputs>(() => ({
     ...DEFAULT_INPUTS,
@@ -110,6 +114,7 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
 
           {outcome.ok && (
             <>
+              <SaveRecipeButton inputs={outcome.result.inputs} result={outcome.result} />
               <ComputedRecipeTable components={outcome.result.components} totals={outcome.result.totals} />
               <RecipeAnalysisTable result={outcome.result} />
               <PodPacPanel result={outcome.result} sugarCandidates={otherSugars} onTargetChange={handleInputsChange} />
@@ -117,8 +122,6 @@ export function CalculatorApp({ initialIngredients, isDemo = false }: Calculator
           )}
         </div>
       </div>
-
-      <IngredientManager ingredients={ingredients} onIngredientsChange={setIngredients} />
     </div>
   )
 }

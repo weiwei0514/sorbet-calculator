@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Ingredient, IngredientInput } from '@/lib/calculator/types'
 import { createClient } from '@/lib/supabase/client'
+import { extractSupabaseMessage } from '@/lib/supabase/errors'
 import { createIngredient, deleteIngredient, updateIngredient } from '@/lib/ingredients/mutations'
 import { IngredientForm } from './IngredientForm'
 import { IngredientTable } from './IngredientTable'
@@ -24,13 +25,6 @@ const CATEGORY_TABS: { value: 'all' | 'fruit' | 'other_sugar'; label: string }[]
 
 const NOT_CONFIGURED_MESSAGE =
   '無法連線到食材資料庫，請確認 .env.local 是否已填入正確的 Supabase 專案金鑰（NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY），並已在 Supabase 執行過 supabase/schema.sql。'
-
-function extractSupabaseMessage(e: unknown): string | null {
-  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
-    return (e as { message: string }).message
-  }
-  return null
-}
 
 /** Constructing the client throws synchronously if the env vars are placeholders/invalid.
  *  Deferred to each action (rather than useMemo at mount) so a misconfigured Supabase
