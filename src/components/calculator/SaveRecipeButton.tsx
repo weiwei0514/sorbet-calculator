@@ -18,6 +18,7 @@ const NOT_CONFIGURED_MESSAGE =
 export function SaveRecipeButton({ inputs, result }: SaveRecipeButtonProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [savedName, setSavedName] = useState<string | null>(null)
@@ -32,9 +33,10 @@ export function SaveRecipeButton({ inputs, result }: SaveRecipeButtonProps) {
     setSubmitting(true)
     try {
       const supabase = createClient()
-      await createSavedRecipe(supabase, { name: name.trim(), inputs, result })
+      await createSavedRecipe(supabase, { name: name.trim(), note: note.trim(), inputs, result })
       setSavedName(name.trim())
       setName('')
+      setNote('')
       setOpen(false)
     } catch (err) {
       console.error(err)
@@ -78,6 +80,20 @@ export function SaveRecipeButton({ inputs, result }: SaveRecipeButtonProps) {
           placeholder="例如：夏季草莓 Sorbet"
           autoFocus
           className="w-full border-b bg-transparent pb-1.5 text-base outline-none"
+          style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+        />
+      </label>
+
+      <label className="flex flex-col gap-2">
+        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+          備註（選填）
+        </span>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="例如：客人反映偏甜，下次砂糖再減 15g；這批用宜蘭金棗"
+          rows={2}
+          className="w-full resize-y border-b bg-transparent pb-1.5 text-base outline-none"
           style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
         />
       </label>

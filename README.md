@@ -17,7 +17,9 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
    SUPABASE_SERVICE_ROLE_KEY=...
    ANTHROPIC_API_KEY=...   # 「已儲存配方」頁的 AI 風味分析會用到
    ```
-4. 依序執行 `supabase/migrations/` 內的 SQL（在 Supabase SQL Editor）。其中 `0005_recipe_ai_analysis.sql` 為 AI 風味分析的快取欄位。
+4. 依序執行 `supabase/migrations/` 內的 SQL（在 Supabase SQL Editor）。
+   - `0005_recipe_ai_analysis.sql` — AI 風味分析與追問對話的快取欄位
+   - `0006_saved_recipe_note.sql` — 儲存配方的「備註」欄位（**未執行的話，儲存配方會失敗**）
 5. `npm run dev` 啟動開發伺服器
 
 在完成上述設定前，首頁會顯示提示訊息，說明尚需設定 Supabase。

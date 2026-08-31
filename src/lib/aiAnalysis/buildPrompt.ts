@@ -23,6 +23,12 @@ export function buildRecipeAnalysisPrompt(recipe: SavedRecipe): string {
   const lines: string[] = []
 
   lines.push(`# 配方名稱：${name}`)
+  const note = (recipe.note ?? '').trim()
+  if (note) {
+    lines.push('')
+    lines.push(`## 製作者備註`)
+    lines.push(note)
+  }
   lines.push('')
   lines.push(`## 基本設定`)
   lines.push(`- 最終配方總重：${n(inputs.totalWeightG, 0)} g`)

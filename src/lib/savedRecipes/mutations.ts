@@ -4,6 +4,8 @@ import { rowToSavedRecipe, type SavedRecipeRow } from './mapping'
 
 export interface CreateSavedRecipeInput {
   name: string
+  /** 備註 — optional free text; stored as '' when omitted. */
+  note?: string
   inputs: RecipeInputs
   result: RecipeResult
 }
@@ -11,7 +13,7 @@ export interface CreateSavedRecipeInput {
 export async function createSavedRecipe(client: SupabaseClient, input: CreateSavedRecipeInput): Promise<SavedRecipe> {
   const { data, error } = await client
     .from('saved_recipes')
-    .insert({ name: input.name, inputs: input.inputs, result: input.result })
+    .insert({ name: input.name, note: input.note ?? '', inputs: input.inputs, result: input.result })
     .select('*')
     .single()
   if (error) throw error

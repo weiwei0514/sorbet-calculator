@@ -202,10 +202,28 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
                 <span className="tabular text-sm" style={{ color: 'var(--muted)' }}>
                   {fmt(recipe.result.totals.weightG, 0)}g ・ {fruitNames} ・ 總固形物 {fmt(recipe.result.totals.totalSolidsPct)}%
                 </span>
+                {recipe.note && !expanded && (
+                  <span
+                    className="font-display line-clamp-2 text-sm italic"
+                    style={{ color: 'var(--faint)' }}
+                  >
+                    {recipe.note}
+                  </span>
+                )}
               </button>
 
               {expanded && (
                 <div className="flex flex-col gap-10 border-t px-5 pt-8 pb-6" style={{ borderColor: 'var(--rule)' }}>
+                  {recipe.note && (
+                    <div className="flex flex-col gap-1.5 border-l-2 pl-4" style={{ borderColor: 'var(--accent)' }}>
+                      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+                        備註
+                      </span>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--ink)' }}>
+                        {recipe.note}
+                      </p>
+                    </div>
+                  )}
                   <ComputedRecipeTable components={recipe.result.components} totals={recipe.result.totals} />
                   <RecipeAnalysisTable result={recipe.result} />
                   <PodPacSummary recipe={recipe} />

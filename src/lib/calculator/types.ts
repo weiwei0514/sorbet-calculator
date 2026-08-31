@@ -214,6 +214,8 @@ export interface RecipeAiAnalysis {
 export interface SavedRecipe {
   id: string
   name: string
+  /** 備註 — free text entered on the 儲存配方 form. '' when none (see migration 0006). */
+  note: string
   inputs: RecipeInputs
   result: RecipeResult
   /** Cached AI 風味分析; null until the user runs it on the 已儲存配方 page. */
