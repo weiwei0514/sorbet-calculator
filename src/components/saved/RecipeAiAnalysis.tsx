@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { RecipeAiAnalysis as Analysis, SavedRecipe } from '@/lib/calculator/types'
+import { MAX_CHAT_MESSAGE_CHARS, type AnalysisChatTurn } from '@/lib/aiAnalysis/chat'
 import { Button } from '@/components/ui/Button'
 
 function formatDate(iso: string) {
@@ -38,6 +39,109 @@ function BulletList({ label, items }: { label: string; items: string[] }) {
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+function FollowUpChat({ recipe, analysis }: { recipe: SavedRecipe; analysis: Analysis }) {
+  const [turns, setTurns] = useState<AnalysisChatTurn[]>([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function send() {
+    const question = input.trim()
+    if (!question || loading) return
+    if (question.length > MAX_CHAT_MESSAGE_CHARS) {
+      setError(`問題請控制在 ${MAX_CHAT_MESSAGE_CHARS} 字以內。`)
+      return
+    }
+    const history: AnalysisChatTurn[] = [...turns, { role: 'user', content: question }]
+    setTurns(history)
+    setInput('')
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await fetch('/api/analyze-recipe/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipe, analysis, history }),
+      })
+      const data = (await res.json()) as { reply?: string; error?: string }
+      if (!res.ok || !data.reply) {
+        throw new Error(data.error ?? '追問失敗，請再試一次。')
+      }
+      setTurns([...history, { role: 'assistant', content: data.reply }])
+    } catch (e) {
+      // Roll the unanswered question back into the input so it isn't lost.
+      setTurns(turns)
+      setInput(question)
+      setError(e instanceof Error ? e.message : '追問失敗，請再試一次。')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4 border-t pt-6" style={{ borderColor: 'var(--rule)' }}>
+      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+        追問 AI（針對以上分析）
+      </span>
+
+      {turns.length > 0 && (
+        <ul className="flex flex-col gap-4">
+          {turns.map((t, i) => (
+            <li key={i} className="flex flex-col gap-1">
+              <span
+                className="font-mono-label text-[10px]"
+                style={{ color: t.role === 'user' ? 'var(--muted)' : 'var(--accent)' }}
+              >
+                {t.role === 'user' ? '你' : 'AI'}
+              </span>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--ink)' }}>
+                {t.content}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {loading && (
+        <p className="text-xs" style={{ color: 'var(--faint)' }}>
+          AI 思考中…
+        </p>
+      )}
+
+      {error && (
+        <p className="border-l-2 pl-4 text-sm" style={{ borderColor: 'var(--danger)', color: 'var(--muted)' }}>
+          {error}
+        </p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              void send()
+            }
+          }}
+          rows={2}
+          placeholder="例如：如果我想讓它更酸一點，砂糖要怎麼配合調整？"
+          className="w-full resize-y rounded-md border bg-transparent p-3 text-sm outline-none"
+          style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+        />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[10px]" style={{ color: 'var(--faint)' }}>
+            Enter 送出 · Shift+Enter 換行
+          </span>
+          <Button variant="outline" onClick={() => void send()} disabled={loading || input.trim().length === 0}>
+            {loading ? '送出中…' : '送出'}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -124,6 +228,9 @@ export function RecipeAiAnalysisPanel({
           <p className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
             {formatDate(analysis.generatedAt)} ・ {analysis.model} ・ AI 生成內容僅供參考
           </p>
+
+          {/* Reset the follow-up thread whenever the analysis is (re)generated. */}
+          <FollowUpChat key={analysis.generatedAt} recipe={recipe} analysis={analysis} />
         </div>
       )}
     </div>
