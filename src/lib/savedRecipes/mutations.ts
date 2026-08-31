@@ -25,6 +25,12 @@ export async function deleteSavedRecipe(client: SupabaseClient, id: string): Pro
   if (error) throw error
 }
 
+/** Updates the free-text 備註 on a saved recipe (see migration 0006). */
+export async function updateSavedRecipeNote(client: SupabaseClient, id: string, note: string): Promise<void> {
+  const { error } = await client.from('saved_recipes').update({ note }).eq('id', id)
+  if (error) throw error
+}
+
 /** Caches an AI 風味分析 onto a saved recipe row (see migration 0005). */
 export async function saveRecipeAiAnalysis(
   client: SupabaseClient,

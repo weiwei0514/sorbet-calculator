@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
 import { createClient } from '@/lib/supabase/client'
 import { extractSupabaseMessage } from '@/lib/supabase/errors'
-import { deleteSavedRecipe } from '@/lib/savedRecipes/mutations'
+import { deleteSavedRecipe, updateSavedRecipeNote } from '@/lib/savedRecipes/mutations'
 import { estimateStorageTemp, formatStorageTemp } from '@/lib/calculator/storageTemp'
 import { ComputedRecipeTable } from '@/components/calculator/ComputedRecipeTable'
 import { RecipeAnalysisTable } from '@/components/calculator/RecipeAnalysisTable'
@@ -37,6 +37,93 @@ function Chevron({ expanded }: { expanded: boolean }) {
     >
       <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  )
+}
+
+function NoteEditor({ recipe, onSaved }: { recipe: SavedRecipe; onSaved: (note: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(recipe.note)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function save() {
+    setSaving(true)
+    setError(null)
+    const next = draft.trim()
+    try {
+      await updateSavedRecipeNote(createClient(), recipe.id, next)
+      onSaved(next)
+      setEditing(false)
+    } catch (e) {
+      console.error(e)
+      const detail = extractSupabaseMessage(e)
+      setError(detail ? `儲存失敗：${detail}` : '無法連線到資料庫，請確認 Supabase 設定是否正確。')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!editing) {
+    return (
+      <div className="flex flex-col gap-1.5 border-l-2 pl-4" style={{ borderColor: 'var(--accent)' }}>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+            備註
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(recipe.note)
+              setError(null)
+              setEditing(true)
+            }}
+            className="font-mono-label text-[10px]"
+            style={{ color: 'var(--accent)' }}
+          >
+            {recipe.note ? '編輯' : '+ 新增備註'}
+          </button>
+        </div>
+        {recipe.note ? (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--ink)' }}>
+            {recipe.note}
+          </p>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--faint)' }}>
+            尚無備註
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-l-2 pl-4" style={{ borderColor: 'var(--accent)' }}>
+      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+        備註
+      </span>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={3}
+        autoFocus
+        placeholder="例如：客人反映偏甜，下次砂糖再減 15g"
+        className="w-full resize-y rounded-md border bg-transparent p-2.5 text-sm outline-none"
+        style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
+      />
+      {error && (
+        <p className="text-sm" style={{ color: 'var(--danger)' }}>
+          {error}
+        </p>
+      )}
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={save} disabled={saving}>
+          {saving ? '儲存中…' : '儲存'}
+        </Button>
+        <Button variant="ghost" onClick={() => setEditing(false)} disabled={saving}>
+          取消
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -128,6 +215,10 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
     setRecipes((prev) => prev.map((r) => (r.id === id ? { ...r, aiAnalysis: analysis } : r)))
   }
 
+  function handleNoteSaved(id: string, note: string) {
+    setRecipes((prev) => prev.map((r) => (r.id === id ? { ...r, note } : r)))
+  }
+
   async function handleDelete(recipe: SavedRecipe) {
     setErrorMessage(null)
     try {
@@ -214,16 +305,7 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
 
               {expanded && (
                 <div className="flex flex-col gap-10 border-t px-5 pt-8 pb-6" style={{ borderColor: 'var(--rule)' }}>
-                  {recipe.note && (
-                    <div className="flex flex-col gap-1.5 border-l-2 pl-4" style={{ borderColor: 'var(--accent)' }}>
-                      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
-                        備註
-                      </span>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--ink)' }}>
-                        {recipe.note}
-                      </p>
-                    </div>
-                  )}
+                  <NoteEditor recipe={recipe} onSaved={(note) => handleNoteSaved(recipe.id, note)} />
                   <ComputedRecipeTable components={recipe.result.components} totals={recipe.result.totals} />
                   <RecipeAnalysisTable result={recipe.result} />
                   <PodPacSummary recipe={recipe} />
