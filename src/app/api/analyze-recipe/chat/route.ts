@@ -3,6 +3,8 @@ import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
 import { RECIPE_ANALYSIS_SYSTEM, buildRecipeAnalysisPrompt } from '@/lib/aiAnalysis/buildPrompt'
 import { formatAnalysisAsText } from '@/lib/aiAnalysis/formatAnalysis'
 import { MAX_CHAT_MESSAGE_CHARS, MAX_CHAT_TURNS, type AnalysisChatTurn } from '@/lib/aiAnalysis/chat'
+import { createClient } from '@/lib/supabase/server'
+import { saveRecipeAiAnalysis } from '@/lib/savedRecipes/mutations'
 
 export const maxDuration = 120
 
@@ -83,7 +85,21 @@ export async function POST(request: Request) {
     if (!reply) {
       return Response.json({ error: 'AI 沒有回覆內容，請再試一次。' }, { status: 502 })
     }
-    return Response.json({ reply })
+
+    const conversation: AnalysisChatTurn[] = [...history, { role: 'assistant', content: reply }]
+
+    // Persist the thread onto the saved recipe's ai_analysis. Best-effort — a
+    // write failure still returns the reply the user just paid for.
+    if (recipe.id) {
+      try {
+        const supabase = await createClient()
+        await saveRecipeAiAnalysis(supabase, recipe.id, { ...analysis, conversation })
+      } catch (err) {
+        console.error('AI analyze-recipe chat: failed to persist conversation', err)
+      }
+    }
+
+    return Response.json({ reply, conversation })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('AI analyze-recipe chat error:', msg)

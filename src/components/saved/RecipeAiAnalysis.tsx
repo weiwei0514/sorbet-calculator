@@ -43,8 +43,18 @@ function BulletList({ label, items }: { label: string; items: string[] }) {
   )
 }
 
-function FollowUpChat({ recipe, analysis }: { recipe: SavedRecipe; analysis: Analysis }) {
-  const [turns, setTurns] = useState<AnalysisChatTurn[]>([])
+function FollowUpChat({
+  recipe,
+  analysis,
+  initialTurns,
+  onConversation,
+}: {
+  recipe: SavedRecipe
+  analysis: Analysis
+  initialTurns: AnalysisChatTurn[]
+  onConversation: (turns: AnalysisChatTurn[]) => void
+}) {
+  const [turns, setTurns] = useState<AnalysisChatTurn[]>(initialTurns)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,11 +77,13 @@ function FollowUpChat({ recipe, analysis }: { recipe: SavedRecipe; analysis: Ana
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipe, analysis, history }),
       })
-      const data = (await res.json()) as { reply?: string; error?: string }
+      const data = (await res.json()) as { reply?: string; conversation?: AnalysisChatTurn[]; error?: string }
       if (!res.ok || !data.reply) {
         throw new Error(data.error ?? '追問失敗，請再試一次。')
       }
-      setTurns([...history, { role: 'assistant', content: data.reply }])
+      const next = data.conversation ?? [...history, { role: 'assistant' as const, content: data.reply }]
+      setTurns(next)
+      onConversation(next)
     } catch (e) {
       // Roll the unanswered question back into the input so it isn't lost.
       setTurns(turns)
@@ -229,8 +241,18 @@ export function RecipeAiAnalysisPanel({
             {formatDate(analysis.generatedAt)} ・ {analysis.model} ・ AI 生成內容僅供參考
           </p>
 
-          {/* Reset the follow-up thread whenever the analysis is (re)generated. */}
-          <FollowUpChat key={analysis.generatedAt} recipe={recipe} analysis={analysis} />
+          {/* key on generatedAt: a re-run analysis starts a fresh thread. */}
+          <FollowUpChat
+            key={analysis.generatedAt}
+            recipe={recipe}
+            analysis={analysis}
+            initialTurns={analysis.conversation ?? []}
+            onConversation={(turns) => {
+              const updated: Analysis = { ...analysis, conversation: turns }
+              setAnalysis(updated)
+              onAnalyzed(updated)
+            }}
+          />
         </div>
       )}
     </div>

@@ -168,6 +168,13 @@ export interface ValidationError {
   message: string
 }
 
+/** One turn of the free-form follow-up conversation the user can have with the
+ *  model after the structured analysis is generated. */
+export interface AnalysisChatTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 /** LLM-generated flavour + optimisation read of a saved recipe. Cached on the
  *  saved_recipes row (see migration 0005) because a saved recipe is frozen — the
  *  analysis only changes when the user explicitly asks to re-run it. The first
@@ -196,6 +203,9 @@ export interface RecipeAiAnalysis {
   menuDescription: string
   generatedAt: string
   model: string
+  /** 使用者針對這份分析的追問對話。undefined／[] = 還沒問過。由 /api/analyze-recipe/chat
+   *  在每次回覆後寫回；「重新分析」會整包覆蓋掉，對話也一併清空。 */
+  conversation?: AnalysisChatTurn[]
 }
 
 /** A named, frozen snapshot of a computed recipe ("儲存配方"). `inputs`/`result` are the
