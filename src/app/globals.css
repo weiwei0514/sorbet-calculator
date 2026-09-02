@@ -17,6 +17,8 @@
   --on-accent: #ffffff;
   /* Destructive/error — kept distinct from --accent so delete/errors never read as "just another button". */
   --danger: #a13b3b;
+  /* Affirmative — "in range" / pass markers (Gelato analysis). */
+  --ok: #0d7a6f;
 
   /* Categorical series colors — validated for CVD-safety with
      scripts/validate_palette.js (dataviz skill), adjacent pairs, light+dark. */

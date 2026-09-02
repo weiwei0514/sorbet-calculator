@@ -26,7 +26,11 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
 
 ## 專案結構
 
-- `src/lib/calculator/` — 純計算引擎（types / config / validate / engine），與 UI 完全解耦，可獨立測試
+- `src/lib/calculator/` — Sorbet 純計算引擎（types / config / validate / engine），與 UI 完全解耦，可獨立測試
+- `src/lib/gelato/` — Gelato 配方平衡引擎：Step 0 區間設定 → Step 1 約束材料 → Step 2 自由材料
+  → 三元一次方程式（`solve3x3.ts`）求基礎乳製品 → 限制條件最佳化（`optimize.ts` 為可替換的 Nelder–Mead）
+  → 全指標驗算。無可行解時回報卡住的指標與最接近可行解。純函式，`__tests__/gelato.test.ts` 覆蓋
+- 計算機頁（`/`）上方可切換 SORBET / GELATO（`CalculatorModeSwitch`），選擇記在 localStorage
 - `src/lib/ingredients/` — 食材資料庫的查詢與寫入（透過 Supabase）
 - `src/lib/aiAnalysis/` — AI 風味分析的 prompt 組裝與輸出 schema
 - `src/app/api/analyze-recipe/` — 呼叫 Claude（`claude-opus-5`）分析已儲存配方的 route handler，結果快取回 `saved_recipes.ai_analysis`
