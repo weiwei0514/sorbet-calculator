@@ -1,5 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { RecipeAiAnalysis, RecipeInputs, RecipeResult, SavedRecipe } from '@/lib/calculator/types'
+import type {
+  RecipeAiAnalysis,
+  RecipeInputs,
+  RecipeResult,
+  SavedGelatoRecipe,
+  SavedSorbetRecipe,
+} from '@/lib/calculator/types'
+import type { GelatoInputs, GelatoRecipeSnapshot } from '@/lib/gelato/types'
 import { rowToSavedRecipe, type SavedRecipeRow } from './mapping'
 
 export interface CreateSavedRecipeInput {
@@ -10,14 +17,37 @@ export interface CreateSavedRecipeInput {
   result: RecipeResult
 }
 
-export async function createSavedRecipe(client: SupabaseClient, input: CreateSavedRecipeInput): Promise<SavedRecipe> {
+export async function createSavedRecipe(
+  client: SupabaseClient,
+  input: CreateSavedRecipeInput
+): Promise<SavedSorbetRecipe> {
   const { data, error } = await client
     .from('saved_recipes')
-    .insert({ name: input.name, note: input.note ?? '', inputs: input.inputs, result: input.result })
+    .insert({ name: input.name, note: input.note ?? '', kind: 'sorbet', inputs: input.inputs, result: input.result })
     .select('*')
     .single()
   if (error) throw error
-  return rowToSavedRecipe(data as SavedRecipeRow)
+  return rowToSavedRecipe(data as SavedRecipeRow) as SavedSorbetRecipe
+}
+
+export interface CreateSavedGelatoRecipeInput {
+  name: string
+  note?: string
+  inputs: GelatoInputs
+  result: GelatoRecipeSnapshot
+}
+
+export async function createSavedGelatoRecipe(
+  client: SupabaseClient,
+  input: CreateSavedGelatoRecipeInput
+): Promise<SavedGelatoRecipe> {
+  const { data, error } = await client
+    .from('saved_recipes')
+    .insert({ name: input.name, note: input.note ?? '', kind: 'gelato', inputs: input.inputs, result: input.result })
+    .select('*')
+    .single()
+  if (error) throw error
+  return rowToSavedRecipe(data as SavedRecipeRow) as SavedGelatoRecipe
 }
 
 export async function deleteSavedRecipe(client: SupabaseClient, id: string): Promise<void> {

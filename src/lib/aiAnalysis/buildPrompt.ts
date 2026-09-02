@@ -1,4 +1,4 @@
-import type { SavedRecipe } from '@/lib/calculator/types'
+import type { SavedSorbetRecipe } from '@/lib/calculator/types'
 
 export const RECIPE_ANALYSIS_SYSTEM = `你是一位專精於 sorbet／sherbet 的義式冰淇淋師（gelatiere）兼風味顧問，熟悉：
 - 各種水果的風味、香氣、含水量與酸度特性
@@ -16,7 +16,7 @@ function n(v: number, digits = 1): string {
   return v.toFixed(digits)
 }
 
-export function buildRecipeAnalysisPrompt(recipe: SavedRecipe): string {
+export function buildRecipeAnalysisPrompt(recipe: SavedSorbetRecipe): string {
   const { name, inputs, result } = recipe
   const { components, totals, comparison, podTarget, pacTarget, missingCoefficientIngredientNames } = result
 

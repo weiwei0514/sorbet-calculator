@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, SavedSorbetRecipe } from '@/lib/calculator/types'
 import { RECIPE_ANALYSIS_SYSTEM, buildRecipeAnalysisPrompt } from '@/lib/aiAnalysis/buildPrompt'
 import { formatAnalysisAsText } from '@/lib/aiAnalysis/formatAnalysis'
 import { MAX_CHAT_MESSAGE_CHARS, MAX_CHAT_TURNS, type AnalysisChatTurn } from '@/lib/aiAnalysis/chat'
@@ -21,7 +21,7 @@ const CHAT_SYSTEM = `${RECIPE_ANALYSIS_SYSTEM}
 - 以純文字回答，不要使用 Markdown 語法（不要 #、**、表格）；要列點時每點以「・」開頭`
 
 interface ChatRequestBody {
-  recipe?: SavedRecipe
+  recipe?: SavedSorbetRecipe
   analysis?: RecipeAiAnalysis
   history?: AnalysisChatTurn[]
 }

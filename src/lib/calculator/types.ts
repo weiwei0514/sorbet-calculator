@@ -208,17 +208,32 @@ export interface RecipeAiAnalysis {
   conversation?: AnalysisChatTurn[]
 }
 
-/** A named, frozen snapshot of a computed recipe ("儲存配方"). `inputs`/`result` are the
- *  exact RecipeInputs/RecipeResult at save time — not ingredient ids — so the saved
- *  numbers never drift if the underlying ingredient data is edited or deleted later. */
-export interface SavedRecipe {
+interface SavedRecipeBase {
   id: string
   name: string
   /** 備註 — free text entered on the 儲存配方 form. '' when none (see migration 0006). */
   note: string
-  inputs: RecipeInputs
-  result: RecipeResult
-  /** Cached AI 風味分析; null until the user runs it on the 已儲存配方 page. */
+  /** Cached AI 風味分析; null until the user runs it (Sorbet only for now). */
   aiAnalysis: RecipeAiAnalysis | null
   createdAt: string
 }
+
+/** A named, frozen Sorbet snapshot. `inputs`/`result` are the exact
+ *  RecipeInputs/RecipeResult at save time — not ingredient ids — so the saved
+ *  numbers never drift if the underlying ingredient data changes later. */
+export interface SavedSorbetRecipe extends SavedRecipeBase {
+  kind: 'sorbet'
+  inputs: RecipeInputs
+  result: RecipeResult
+}
+
+/** A named, frozen Gelato snapshot. `inputs` is the GelatoInputs (Step 0 ranges,
+ *  Step 1/2 materials, base-dairy pick); `result` is the solved GelatoRecipeSnapshot.
+ *  Imported as a type only — the runtime module graph has no cycle. */
+export interface SavedGelatoRecipe extends SavedRecipeBase {
+  kind: 'gelato'
+  inputs: import('@/lib/gelato/types').GelatoInputs
+  result: import('@/lib/gelato/types').GelatoRecipeSnapshot
+}
+
+export type SavedRecipe = SavedSorbetRecipe | SavedGelatoRecipe

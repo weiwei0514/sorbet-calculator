@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
-import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, SavedSorbetRecipe } from '@/lib/calculator/types'
 import { recipeAiAnalysisSchema } from '@/lib/aiAnalysis/schema'
 import { RECIPE_ANALYSIS_SYSTEM, buildRecipeAnalysisPrompt } from '@/lib/aiAnalysis/buildPrompt'
 import { createClient } from '@/lib/supabase/server'
@@ -13,7 +13,7 @@ const MODEL = 'claude-opus-5'
 interface AnalyzeRequestBody {
   /** Saved-recipe id — when present the result is also cached onto the row. */
   id?: string
-  recipe?: SavedRecipe
+  recipe?: SavedSorbetRecipe
 }
 
 export async function POST(request: Request) {

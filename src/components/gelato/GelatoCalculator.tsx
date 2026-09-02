@@ -14,6 +14,7 @@ import { FreeMaterialList } from './FreeMaterialList'
 import { BaseDairyPicker } from './BaseDairyPicker'
 import { GelatoAnalysis, GelatoRecipeTable } from './GelatoResultView'
 import { GelatoInfeasibleView } from './GelatoInfeasibleView'
+import { SaveGelatoRecipeButton } from './SaveGelatoRecipeButton'
 
 export function GelatoCalculator({
   initialIngredients,
@@ -35,8 +36,11 @@ export function GelatoCalculator({
     baseDairy: defaultBaseDairy(initialIngredients),
   }))
 
-  const [result, setResult] = useState<GelatoResult | null>(null)
+  // The inputs snapshot alongside the result they produced — so "儲存配方" persists
+  // exactly what was solved, even if the form is edited afterwards.
+  const [computed, setComputed] = useState<{ inputs: GelatoInputs; result: GelatoResult } | null>(null)
   const [stale, setStale] = useState(true)
+  const result = computed?.result ?? null
 
   function patch(next: Partial<GelatoInputs>) {
     setInputs((prev) => ({ ...prev, ...next }))
@@ -44,7 +48,8 @@ export function GelatoCalculator({
   }
 
   function recalculate() {
-    setResult(calculateGelato(inputs, ingredientsById))
+    const snapshot = structuredClone(inputs)
+    setComputed({ inputs: snapshot, result: calculateGelato(snapshot, ingredientsById) })
     setStale(false)
   }
 
@@ -136,6 +141,9 @@ export function GelatoCalculator({
                   </p>
                   <GelatoAnalysis recipe={result.recipe} />
                 </div>
+                {!stale && computed && (
+                  <SaveGelatoRecipeButton inputs={computed.inputs} recipe={result.recipe} />
+                )}
               </div>
             </Section>
           ) : result.reason === 'infeasible' ? (

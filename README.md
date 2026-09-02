@@ -20,6 +20,7 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
 4. 依序執行 `supabase/migrations/` 內的 SQL（在 Supabase SQL Editor）。
    - `0005_recipe_ai_analysis.sql` — AI 風味分析與追問對話的快取欄位
    - `0006_saved_recipe_note.sql` — 儲存配方的「備註」欄位（**未執行的話，儲存配方會失敗**）
+   - `0007_saved_recipe_kind.sql` — `kind`（sorbet / gelato），讓已儲存配方頁分頁（**未執行的話，儲存 Gelato 配方會失敗**）
 5. `npm run dev` 啟動開發伺服器
 
 在完成上述設定前，首頁會顯示提示訊息，說明尚需設定 Supabase。
@@ -31,6 +32,8 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
   → 三元一次方程式（`solve3x3.ts`）求基礎乳製品 → 限制條件最佳化（`optimize.ts` 為可替換的 Nelder–Mead）
   → 全指標驗算。無可行解時回報卡住的指標與最接近可行解。純函式，`__tests__/gelato.test.ts` 覆蓋
 - 計算機頁（`/`）上方可切換 SORBET / GELATO（`CalculatorModeSwitch`），選擇記在 localStorage
+- 兩種配方都能「儲存配方」；已儲存配方頁（`/saved`）以 SORBET / GELATO 分頁顯示
+  （`saved_recipes.kind` 區分；Gelato 只能在算出可行配方後儲存，AI 風味分析目前仍為 Sorbet 專用）
 - `src/lib/ingredients/` — 食材資料庫的查詢與寫入（透過 Supabase）
 - `src/lib/aiAnalysis/` — AI 風味分析的 prompt 組裝與輸出 schema
 - `src/app/api/analyze-recipe/` — 呼叫 Claude（`claude-opus-5`）分析已儲存配方的 route handler，結果快取回 `saved_recipes.ai_analysis`
