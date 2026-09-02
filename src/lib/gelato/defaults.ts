@@ -7,7 +7,6 @@ export const STEP0_RANGES = {
   fat: { min: 4, max: 12 },
   msnf: { min: 8, max: 12 },
   otherSolids: { min: 0, max: 5 },
-  fatPlusMsnf: { min: 16, max: 22 },
   totalSolids: { min: 32, max: 42 },
   perceivedSugar: { min: 16, max: 23 },
 } satisfies Record<string, MetricRange>
@@ -17,7 +16,6 @@ export const STEP0_ROWS: { key: keyof typeof STEP0_RANGES; label: string }[] = [
   { key: 'fat', label: 'Fat 脂肪' },
   { key: 'msnf', label: 'MSNF 無脂固形物' },
   { key: 'otherSolids', label: 'Other Solids 其他固形物' },
-  { key: 'fatPlusMsnf', label: 'Fat + MSNF 脂肪＋無脂固形物' },
   { key: 'totalSolids', label: 'Total Solids 固形物總和' },
   { key: 'perceivedSugar', label: 'Perceived Sugar 有感糖' },
 ]
