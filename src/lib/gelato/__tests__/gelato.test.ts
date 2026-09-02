@@ -36,6 +36,20 @@ function inputs(over: Partial<GelatoInputs> = {}): GelatoInputs {
   }
 }
 
+/** Recompute a component fraction from the final recipe + ingredient data. */
+function recomputePct(
+  components: { ingredientId: string; weightG: number }[],
+  key: 'fatPct' | 'nonFatSolidsPct' | 'sugarPct',
+  W: number
+): number {
+  let g = 0
+  for (const c of components) {
+    const ing = BY_ID.get(c.ingredientId)!
+    g += c.weightG * (ing[key] / 100)
+  }
+  return (g / W) * 100
+}
+
 describe('calculateGelato — deterministic pipeline', () => {
   it('solves the 3×3, recombines, and hits the Fat / MSNF targets exactly', () => {
     const r = calculateGelato(inputs(), BY_ID)
@@ -45,23 +59,20 @@ describe('calculateGelato — deterministic pipeline', () => {
     const total = r.recipe.components.reduce((a, c) => a + c.weightG, 0)
     expect(total).toBeCloseTo(1000, 3)
 
-    const fat = r.recipe.metrics.find((m) => m.key === 'fat')!.value
-    const msnf = r.recipe.metrics.find((m) => m.key === 'msnf')!.value
-    expect(fat).toBeCloseTo(8, 6)
-    expect(msnf).toBeCloseTo(10, 6)
+    // Fat/MSNF aren't shown any more, but the full recombination must still land on them.
+    expect(recomputePct(r.recipe.components, 'fatPct', 1000)).toBeCloseTo(8, 6)
+    expect(recomputePct(r.recipe.components, 'nonFatSolidsPct', 1000)).toBeCloseTo(10, 6)
   })
 
-  it('produces a STEP 0 row for every acceptance metric with pass/overBy', () => {
+  it('exposes the 水份／固形物 breakdown', () => {
     const r = calculateGelato(inputs(), BY_ID)
     if (!r.ok) throw new Error('expected ok')
-    expect(r.recipe.step0.map((c) => c.key)).toEqual([
-      'sugar', 'fat', 'msnf', 'otherSolids', 'fatPlusMsnf', 'totalSolids', 'perceivedSugar',
-    ])
-    for (const c of r.recipe.step0) {
-      if (c.pass) expect(c.overBy).toBe(0)
-      else expect(c.overBy).toBeGreaterThan(0)
-    }
-    expect(r.recipe.overallPass).toBe(r.recipe.step0.every((c) => c.pass))
+    const b = r.recipe.breakdown
+    expect(b.sugarPct).toBeCloseTo(recomputePct(r.recipe.components, 'sugarPct', 1000), 6)
+    // Total solids folds in fat + MSNF even though they aren't broken out as rows.
+    expect(b.totalSolidsPct).toBeGreaterThan(b.sugarPct + b.otherSolidsPct)
+    expect(r.recipe.podPer1000g).toBeCloseTo(r.recipe.podTotal, 6) // W = 1000
+    expect(r.recipe.pacPer1000g).toBeCloseTo(r.recipe.pacTotal, 6)
   })
 
   it('subtracts flavour-material components before the 3×3', () => {
@@ -73,7 +84,7 @@ describe('calculateGelato — deterministic pipeline', () => {
     expect(r.recipe.remaining.msnfG).toBeCloseTo(100 - 5, 6)
     expect(r.recipe.components.some((c) => c.name === '開心果醬' && c.role === 'flavour')).toBe(true)
     // Final fat still exactly the target.
-    expect(r.recipe.metrics.find((m) => m.key === 'fat')!.value).toBeCloseTo(8, 6)
+    expect(recomputePct(r.recipe.components, 'fatPct', 1000)).toBeCloseTo(8, 6)
   })
 
   it('honours percentage-unit flavour materials', () => {

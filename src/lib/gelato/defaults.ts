@@ -51,8 +51,3 @@ export function defaultGelatoInputs(ingredients: Ingredient[]): GelatoInputs {
   }
 }
 
-export function checkStep0(actual: number, range: MetricRange): { pass: boolean; overBy: number } {
-  const pass = actual >= range.min - 1e-9 && actual <= range.max + 1e-9
-  const overBy = pass ? 0 : actual < range.min ? range.min - actual : actual - range.max
-  return { pass, overBy }
-}

@@ -1,15 +1,12 @@
 import type { Ingredient } from '@/lib/calculator/types'
-import { STEP0_RANGES, STEP0_ROWS, checkStep0 } from './defaults'
 import { accumulate, type WeightedIngredient } from './nutrition'
 import { solveBase } from './solve3x3'
 import type {
   GelatoComponent,
   GelatoInputs,
-  GelatoMetric,
   GelatoRecipeSnapshot,
   GelatoResult,
   IngredientsById,
-  Step0Check,
 } from './types'
 
 function amountToGrams(amount: number, unit: 'g' | 'pct', totalWeightG: number): number {
@@ -144,45 +141,23 @@ export function calculateGelato(inputs: GelatoInputs, byId: IngredientsById): Ge
   const components = [...merged.values()].map((c) => ({ ...c, pctOfTotal: (c.weightG / W) * 100 }))
 
   const pct = (g: number) => (g / W) * 100
-  const metrics: GelatoMetric[] = [
-    { key: 'water', label: 'Water 水分', value: pct(totals.waterG), unit: '%' },
-    { key: 'fat', label: 'Fat 脂肪', value: pct(totals.fatG), unit: '%' },
-    { key: 'msnf', label: 'MSNF 無脂固形物', value: pct(totals.msnfG), unit: '%' },
-    { key: 'otherSolids', label: 'Other Solids 其他固形物', value: pct(totals.otherSolidsG), unit: '%' },
-    { key: 'fatPlusMsnf', label: 'Fat + MSNF', value: pct(totals.fatG + totals.msnfG), unit: '%' },
-    { key: 'totalSolids', label: 'Total Solids 固形物總和', value: pct(totals.totalSolidsG), unit: '%' },
-    { key: 'totalSugar', label: 'Total Sugar 總糖分', value: pct(totals.sugarG), unit: '%' },
-    { key: 'perceivedSugar', label: 'Perceived Sugar 有感糖', value: pct(totals.podG), unit: '%' },
-    { key: 'pod', label: 'POD', value: totals.podG, unit: '' },
-    { key: 'pac', label: 'PAC', value: totals.pacG, unit: '' },
-  ]
-
-  // ---- STEP 0 acceptance check ----------------------------------------
-  const actualByKey: Record<(typeof STEP0_ROWS)[number]['key'], number> = {
-    sugar: pct(totals.sugarG),
-    fat: pct(totals.fatG),
-    msnf: pct(totals.msnfG),
-    otherSolids: pct(totals.otherSolidsG),
-    fatPlusMsnf: pct(totals.fatG + totals.msnfG),
-    totalSolids: pct(totals.totalSolidsG),
-    perceivedSugar: pct(totals.podG),
-  }
-  const step0: Step0Check[] = STEP0_ROWS.map((row) => {
-    const range = STEP0_RANGES[row.key]
-    const actual = actualByKey[row.key]
-    const { pass, overBy } = checkStep0(actual, range)
-    return { key: row.key, label: row.label, actual, range, pass, overBy }
-  })
-  const overallPass = step0.every((c) => c.pass)
-
   const recipe: GelatoRecipeSnapshot = {
     components,
     totalWeightG: totals.weightG,
-    metrics,
-    step0,
-    overallPass,
+    breakdown: {
+      waterG: totals.waterG,
+      waterPct: pct(totals.waterG),
+      sugarG: totals.sugarG,
+      sugarPct: pct(totals.sugarG),
+      otherSolidsG: totals.otherSolidsG,
+      otherSolidsPct: pct(totals.otherSolidsG),
+      totalSolidsG: totals.totalSolidsG,
+      totalSolidsPct: pct(totals.totalSolidsG),
+    },
     podTotal: totals.podG,
     pacTotal: totals.pacG,
+    podPer1000g: (totals.podG / W) * 1000,
+    pacPer1000g: (totals.pacG / W) * 1000,
     base: { xG: clamp(xG), yG: clamp(yG), zG: clamp(zG) },
     remaining,
   }

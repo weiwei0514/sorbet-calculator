@@ -32,7 +32,7 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
   STEP 0 固定驗收範圍 → STEP 1 目標（總重、Fat%、MSNF%）+ 固定加入（蔗糖/膠體/蛋黃%）
   → STEP 2 風味／固定食材（固定重量或 %）→ 扣除所有固定食材的重量與成分
   → `solve3x3.ts` 三元一次方程式求三個主要基底食材 X/Y/Z
-  → STEP 3 重新逐項計算（Fat/MSNF/Other Solids/Total Solids/Sugar/有感糖/POD/PAC）與 STEP 0 驗收（PASS/FAIL）。
+  → STEP 3 重新計算水份／糖分／其他固形物／總固形物比例，並算最終 POD、PAC 與建議儲存溫度。
   負重量或無唯一解時回報錯誤，不自行修改使用者目標。純函式，`__tests__/gelato.test.ts` 覆蓋
 - 計算機頁（`/`）上方可切換 SORBET / GELATO（`CalculatorModeSwitch`），選擇記在 localStorage
 - 兩種配方都能「儲存配方」；已儲存配方頁（`/saved`）以 SORBET / GELATO 分頁顯示

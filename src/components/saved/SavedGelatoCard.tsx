@@ -1,7 +1,7 @@
 'use client'
 
 import type { SavedGelatoRecipe } from '@/lib/calculator/types'
-import { GelatoAnalysis, GelatoFormulaCheck, GelatoRecipeTable } from '@/components/gelato/GelatoResultView'
+import { GelatoBreakdownTable, GelatoPodPacSummary, GelatoRecipeTable } from '@/components/gelato/GelatoResultView'
 import { Button } from '@/components/ui/Button'
 import { Chevron, NoteEditor, fmt, formatDate } from './shared'
 
@@ -38,8 +38,7 @@ export function SavedGelatoCard({
   onNoteSaved: (note: string) => void
 }) {
   const snap = recipe.result
-  const fat = snap.metrics.find((m) => m.key === 'fat')?.value ?? 0
-  const totalSolids = snap.metrics.find((m) => m.key === 'totalSolids')?.value ?? 0
+  const totalSolids = snap.breakdown.totalSolidsPct
 
   return (
     <li
@@ -60,12 +59,7 @@ export function SavedGelatoCard({
           {formatDate(recipe.createdAt)}
         </span>
         <span className="tabular text-sm" style={{ color: 'var(--muted)' }}>
-          {fmt(snap.totalWeightG, 0)}g ・ 脂肪 {fmt(fat)}% ・ 固形物 {fmt(totalSolids)}%
-          {snap.overallPass ? (
-            <span style={{ color: 'var(--ok)' }}> ・ ✅ PASS</span>
-          ) : (
-            <span style={{ color: 'var(--danger)' }}> ・ ❌ FAIL</span>
-          )}
+          {fmt(snap.totalWeightG, 0)}g ・ 糖分 {fmt(snap.breakdown.sugarPct)}% ・ 總固形物 {fmt(totalSolids)}%
         </span>
         {recipe.note && !expanded && (
           <span className="font-display line-clamp-2 text-sm italic" style={{ color: 'var(--faint)' }}>
@@ -81,11 +75,16 @@ export function SavedGelatoCard({
           <GelatoRecipeTable recipe={snap} />
           <div>
             <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
-              Ingredient Analysis · 配方完整分析
+              Analysis · 水份與固形物比例
             </p>
-            <GelatoAnalysis recipe={snap} />
+            <GelatoBreakdownTable recipe={snap} />
           </div>
-          <GelatoFormulaCheck recipe={snap} />
+          <div>
+            <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
+              Sweetness &amp; Freezing Point · 甜度與抗凍力
+            </p>
+            <GelatoPodPacSummary recipe={snap} />
+          </div>
           <div>
             <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={onDelete}>
               刪除此配方

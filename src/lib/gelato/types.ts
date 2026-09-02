@@ -49,35 +49,28 @@ export interface GelatoComponent {
   pctOfTotal: number
 }
 
-/** One line of the STEP 3 analysis block. */
-export interface GelatoMetric {
-  key: string
-  label: string
-  /** Percent of the finished mix (or a raw POD/PAC gram total when unit === '' ). */
-  value: number
-  unit: '%' | ''
-}
-
-/** One row of the STEP 0 GELATO FORMULA CHECK. */
-export interface Step0Check {
-  key: string
-  label: string
-  actual: number
-  range: MetricRange
-  pass: boolean
-  /** 0 when pass; otherwise how far outside the band (absolute %). */
-  overBy: number
+/** The STEP 3 水份／固形物 breakdown — same shape as the Sorbet analysis table. */
+export interface GelatoBreakdown {
+  waterG: number
+  waterPct: number
+  sugarG: number
+  sugarPct: number
+  otherSolidsG: number
+  otherSolidsPct: number
+  totalSolidsG: number
+  totalSolidsPct: number
 }
 
 export interface GelatoRecipeSnapshot {
   components: GelatoComponent[]
   totalWeightG: number
-  metrics: GelatoMetric[]
-  step0: Step0Check[]
-  overallPass: boolean
+  breakdown: GelatoBreakdown
+  /** Whole-batch POD/PAC and the batch-size-independent per-1000g values. */
   podTotal: number
   pacTotal: number
-  /** The solved base-dairy weights, for display. */
+  podPer1000g: number
+  pacPer1000g: number
+  /** The solved base weights, for display. */
   base: { xG: number; yG: number; zG: number }
   /** Intermediate values (STEP 2-2 .. 2-4) surfaced for transparency. */
   remaining: { weightG: number; fatG: number; msnfG: number }

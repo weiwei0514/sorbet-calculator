@@ -1,6 +1,7 @@
 'use client'
 
 import type { GelatoRecipeSnapshot } from '@/lib/gelato/types'
+import { estimateStorageTemp, formatStorageTemp } from '@/lib/calculator/storageTemp'
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
 
 function fmt(n: number, digits = 1) {
@@ -56,67 +57,84 @@ export function GelatoRecipeTable({ recipe }: { recipe: GelatoRecipeSnapshot }) 
   )
 }
 
-export function GelatoAnalysis({ recipe }: { recipe: GelatoRecipeSnapshot }) {
+/** 水份／固形物比例 — same shape as the Sorbet 配方分析 table. */
+export function GelatoBreakdownTable({ recipe }: { recipe: GelatoRecipeSnapshot }) {
+  const b = recipe.breakdown
   return (
-    <div className="flex flex-col gap-2.5">
-      {recipe.metrics.map((m) => (
-        <div
-          key={m.key}
-          className="flex items-baseline justify-between border-b pb-1.5 text-sm"
-          style={{ borderColor: 'var(--rule)' }}
-        >
-          <span style={{ color: 'var(--ink)' }}>{m.label}</span>
-          <span className="tabular" style={{ color: 'var(--ink)' }}>
-            {m.unit === '%' ? `${fmt(m.value, 2)}%` : fmt(m.value, 2)}
-          </span>
-        </div>
-      ))}
-    </div>
+    <Table>
+      <THead>
+        <TR>
+          <TH>項目</TH>
+          <TH className="text-right">重量</TH>
+          <TH className="text-right">比例</TH>
+        </TR>
+      </THead>
+      <TBody>
+        <TR>
+          <TD>水分</TD>
+          <TD className="tabular text-right">{fmt(b.waterG)} g</TD>
+          <TD className="tabular text-right">{fmt(b.waterPct)}%</TD>
+        </TR>
+        <TR>
+          <TD>糖分</TD>
+          <TD className="tabular text-right">{fmt(b.sugarG)} g</TD>
+          <TD className="tabular text-right">{fmt(b.sugarPct)}%</TD>
+        </TR>
+        <TR>
+          <TD>其他固形物</TD>
+          <TD className="tabular text-right">{fmt(b.otherSolidsG)} g</TD>
+          <TD className="tabular text-right">{fmt(b.otherSolidsPct)}%</TD>
+        </TR>
+        <TR className="border-b-0">
+          <TD className="font-display border-t-2 pt-4 text-lg" style={{ borderColor: 'var(--wine)' }}>
+            總固形物
+          </TD>
+          <TD className="tabular border-t-2 pt-4 text-right text-lg" style={{ borderColor: 'var(--wine)' }}>
+            {fmt(b.totalSolidsG)} g
+          </TD>
+          <TD className="tabular border-t-2 pt-4 text-right text-lg" style={{ borderColor: 'var(--wine)' }}>
+            {fmt(b.totalSolidsPct)}%
+          </TD>
+        </TR>
+      </TBody>
+    </Table>
   )
 }
 
-export function GelatoFormulaCheck({ recipe }: { recipe: GelatoRecipeSnapshot }) {
+/** 總 POD / 總 PAC / 每 1000g / 建議儲存溫度 — mirrors the Sorbet PodPacSummary. */
+export function GelatoPodPacSummary({ recipe }: { recipe: GelatoRecipeSnapshot }) {
+  const storage = estimateStorageTemp(recipe.pacPer1000g)
+  const tile = (label: string, value: string) => (
+    <div className="flex flex-col gap-1">
+      <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+        {label}
+      </span>
+      <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
+        {value}
+      </span>
+    </div>
+  )
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
-          GELATO FORMULA CHECK
-        </span>
-        <span
-          className="font-mono-label rounded px-2 py-1 text-[10px]"
-          style={{
-            background: recipe.overallPass ? 'var(--ok)' : 'var(--danger)',
-            color: '#fff',
-          }}
-        >
-          {recipe.overallPass ? '✅ FORMULA PASS' : '❌ FORMULA FAIL'}
-        </span>
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        {tile('總 POD', fmt(recipe.podTotal))}
+        {tile('總 PAC', fmt(recipe.pacTotal))}
+        {tile('每 1000g POD', fmt(recipe.podPer1000g))}
+        {tile('每 1000g PAC', fmt(recipe.pacPer1000g))}
       </div>
-
-      <div className="flex flex-col gap-2">
-        {recipe.step0.map((c) => (
-          <div
-            key={c.key}
-            className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b pb-1.5 text-sm"
-            style={{ borderColor: 'var(--rule)' }}
-          >
-            <span style={{ color: 'var(--ink)' }}>{c.label}</span>
-            <span className="flex items-baseline gap-3">
-              <span className="tabular" style={{ color: 'var(--ink)' }}>
-                {fmt(c.actual, 2)}%
-              </span>
-              <span className="tabular text-xs" style={{ color: 'var(--faint)' }}>
-                {c.range.min}–{c.range.max}%
-              </span>
-              <span
-                className="font-mono-label text-[10px]"
-                style={{ color: c.pass ? 'var(--ok)' : 'var(--danger)' }}
-              >
-                {c.pass ? '✅' : `❌ 超出 ${fmt(c.overBy, 2)}%`}
-              </span>
-            </span>
-          </div>
-        ))}
+      <div
+        className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-l-2 pl-4"
+        style={{ borderColor: 'var(--accent)' }}
+      >
+        <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
+          建議儲存溫度
+        </span>
+        <span className="tabular text-lg" style={{ color: 'var(--ink)' }}>
+          {formatStorageTemp(storage)}
+        </span>
+        <span className="text-xs" style={{ color: 'var(--faint)' }}>
+          參考表 {storage.band}
+        </span>
       </div>
     </div>
   )

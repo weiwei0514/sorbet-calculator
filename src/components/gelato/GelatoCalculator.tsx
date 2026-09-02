@@ -10,7 +10,7 @@ import { Step0Card } from './Step0Card'
 import { Step1Inputs } from './Step1Inputs'
 import { MaterialList } from './MaterialList'
 import { BaseTriplePicker } from './BaseTriplePicker'
-import { GelatoAnalysis, GelatoFormulaCheck, GelatoRecipeTable } from './GelatoResultView'
+import { GelatoBreakdownTable, GelatoPodPacSummary, GelatoRecipeTable } from './GelatoResultView'
 import { SaveGelatoRecipeButton } from './SaveGelatoRecipeButton'
 
 function fmt(n: number, digits = 1) {
@@ -112,12 +112,17 @@ export function GelatoCalculator({
 
             <div>
               <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
-                Ingredient Analysis · 配方完整分析
+                Analysis · 水份與固形物比例
               </p>
-              <GelatoAnalysis recipe={result.recipe} />
+              <GelatoBreakdownTable recipe={result.recipe} />
             </div>
 
-            <GelatoFormulaCheck recipe={result.recipe} />
+            <div>
+              <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
+                Sweetness &amp; Freezing Point · 甜度與抗凍力
+              </p>
+              <GelatoPodPacSummary recipe={result.recipe} />
+            </div>
 
             <SaveGelatoRecipeButton inputs={inputs} recipe={result.recipe} />
           </div>
