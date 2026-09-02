@@ -10,7 +10,13 @@ import { Step0Card } from './Step0Card'
 import { Step1Inputs } from './Step1Inputs'
 import { MaterialList } from './MaterialList'
 import { BaseTriplePicker } from './BaseTriplePicker'
-import { GelatoBreakdownTable, GelatoPodPacSummary, GelatoRecipeTable } from './GelatoResultView'
+import {
+  GelatoBreakdownTable,
+  GelatoCompositionBar,
+  GelatoContributionTable,
+  GelatoPodPacSummary,
+  GelatoRecipeTable,
+} from './GelatoResultView'
 import { SaveGelatoRecipeButton } from './SaveGelatoRecipeButton'
 
 function fmt(n: number, digits = 1) {
@@ -102,6 +108,8 @@ export function GelatoCalculator({
       <Section eyebrow="STEP 3 · Final Formula" title="最終配方">
         {result.ok ? (
           <div className="flex flex-col gap-10">
+            <GelatoCompositionBar recipe={result.recipe} />
+
             <div className="flex flex-wrap gap-x-8 gap-y-1 text-xs" style={{ color: 'var(--faint)' }}>
               <span className="tabular">Remaining Weight {fmt(result.recipe.remaining.weightG)} g</span>
               <span className="tabular">Remaining Fat {fmt(result.recipe.remaining.fatG)} g</span>
@@ -122,6 +130,13 @@ export function GelatoCalculator({
                 Sweetness &amp; Freezing Point · 甜度與抗凍力
               </p>
               <GelatoPodPacSummary recipe={result.recipe} />
+            </div>
+
+            <div>
+              <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
+                Contribution Breakdown · 逐項貢獻與計算過程
+              </p>
+              <GelatoContributionTable recipe={result.recipe} />
             </div>
 
             <SaveGelatoRecipeButton inputs={inputs} recipe={result.recipe} />

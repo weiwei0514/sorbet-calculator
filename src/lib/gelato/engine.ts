@@ -124,21 +124,28 @@ export function calculateGelato(inputs: GelatoInputs, byId: IngredientsById): Ge
   const totals = accumulate(allEntries.map((e) => e.entry))
 
   // Merge duplicate ingredients (e.g. same DB row picked twice) into one row.
-  const merged = new Map<string, GelatoComponent>()
+  const merged = new Map<string, { ingredient: Ingredient; role: GelatoComponent['role']; weightG: number }>()
   for (const { entry, role } of allEntries) {
     const key = `${role}:${entry.ingredient.id}`
     const prev = merged.get(key)
     if (prev) prev.weightG += entry.weightG
-    else
-      merged.set(key, {
-        ingredientId: entry.ingredient.id,
-        name: entry.ingredient.name,
-        role,
-        weightG: entry.weightG,
-        pctOfTotal: 0,
-      })
+    else merged.set(key, { ingredient: entry.ingredient, role, weightG: entry.weightG })
   }
-  const components = [...merged.values()].map((c) => ({ ...c, pctOfTotal: (c.weightG / W) * 100 }))
+  const components: GelatoComponent[] = [...merged.values()].map(({ ingredient, role, weightG }) => {
+    const sugarG = weightG * (ingredient.sugarPct / 100)
+    return {
+      ingredientId: ingredient.id,
+      name: ingredient.name,
+      role,
+      weightG,
+      pctOfTotal: (weightG / W) * 100,
+      sugarG,
+      podCoefficient: ingredient.podCoefficient,
+      pacCoefficient: ingredient.pacCoefficient,
+      podContributionG: sugarG * (ingredient.podCoefficient ?? 0),
+      pacContributionG: sugarG * (ingredient.pacCoefficient ?? 0),
+    }
+  })
 
   const pct = (g: number) => (g / W) * 100
   const recipe: GelatoRecipeSnapshot = {

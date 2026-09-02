@@ -1,7 +1,13 @@
 'use client'
 
 import type { SavedGelatoRecipe } from '@/lib/calculator/types'
-import { GelatoBreakdownTable, GelatoPodPacSummary, GelatoRecipeTable } from '@/components/gelato/GelatoResultView'
+import {
+  GelatoBreakdownTable,
+  GelatoCompositionBar,
+  GelatoContributionTable,
+  GelatoPodPacSummary,
+  GelatoRecipeTable,
+} from '@/components/gelato/GelatoResultView'
 import { Button } from '@/components/ui/Button'
 import { Chevron, NoteEditor, fmt, formatDate } from './shared'
 
@@ -72,6 +78,7 @@ export function SavedGelatoCard({
         <div className="flex flex-col gap-10 border-t px-5 pt-8 pb-6" style={{ borderColor: 'var(--rule)' }}>
           <NoteEditor recipeId={recipe.id} note={recipe.note} onSaved={onNoteSaved} />
           <TargetsSummary recipe={recipe} />
+          <GelatoCompositionBar recipe={snap} />
           <GelatoRecipeTable recipe={snap} />
           <div>
             <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
@@ -84,6 +91,12 @@ export function SavedGelatoCard({
               Sweetness &amp; Freezing Point · 甜度與抗凍力
             </p>
             <GelatoPodPacSummary recipe={snap} />
+          </div>
+          <div>
+            <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
+              Contribution Breakdown · 逐項貢獻與計算過程
+            </p>
+            <GelatoContributionTable recipe={snap} />
           </div>
           <div>
             <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={onDelete}>

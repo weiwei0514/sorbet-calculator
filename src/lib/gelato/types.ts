@@ -40,13 +40,21 @@ export interface GelatoInputs {
 
 export type GelatoComponentRole = 'step1' | 'flavour' | 'fixed' | 'base'
 
-/** One line of the STEP 3 final formula table. */
+/** One line of the STEP 3 final formula table + composition bar + contribution table. */
 export interface GelatoComponent {
   ingredientId: string
   name: string
   role: GelatoComponentRole
   weightG: number
   pctOfTotal: number
+  /** Grams of sugar this component brings in. */
+  sugarG: number
+  /** null when the ingredient has no coefficient set (counted as 0 in the totals). */
+  podCoefficient: number | null
+  pacCoefficient: number | null
+  /** sugarG × (coefficient ?? 0) */
+  podContributionG: number
+  pacContributionG: number
 }
 
 /** The STEP 3 水份／固形物 breakdown — same shape as the Sorbet analysis table. */
