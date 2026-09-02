@@ -1,41 +1,42 @@
 import type { Ingredient } from '@/lib/calculator/types'
 
-export interface BaseDairyAmounts {
-  /** X = 脫脂奶粉 */
-  skimPowderG: number
-  /** Y = 奶油 */
-  butterG: number
-  /** Z = 全脂牛奶 */
-  wholeMilkG: number
+export interface BaseTriple {
+  xG: number
+  yG: number
+  zG: number
 }
 
-export type BaseDairySolve = { ok: true; amounts: BaseDairyAmounts } | { ok: false; degenerate: true }
+export type BaseSolve =
+  | { ok: true; amounts: BaseTriple }
+  | { ok: false; reason: 'no_unique_solution' }
 
 interface Rhs {
-  remainingG: number
-  /** fatTargetG − FixedFat  (grams of fat the base dairy must supply) */
-  fatFromDairyG: number
-  /** msnfTargetG − FixedMSNF */
-  msnfFromDairyG: number
+  /** STEP 2-3: Total Weight − Σ(all fixed weights) */
+  remainingWeightG: number
+  /** STEP 2-4: Fat target − Σ(fixed Fat) */
+  remainingFatG: number
+  /** STEP 2-4: MSNF target − Σ(fixed MSNF) */
+  remainingMsnfG: number
 }
 
 /**
- * Solves, by Cramer's rule, the 3×3 system for the three base dairies:
+ * STEP 2-5 — the three-variable linear system, solved exactly by Cramer's rule:
  *
- *   [ 1      1      1     ] [X]   [ remainingG      ]
- *   [ fatS   fatB   fatM  ] [Y] = [ fatFromDairyG   ]
- *   [ msnfS  msnfB  msnfM ] [Z]   [ msnfFromDairyG  ]
+ *   X + Y + Z                       = remainingWeightG
+ *   fatX·X + fatY·Y + fatZ·Z        = remainingFatG
+ *   msnfX·X + msnfY·Y + msnfZ·Z     = remainingMsnfG
  *
- * where the fat / MSNF coefficients are each ingredient's fraction (fat_pct / 100).
- * `|det| < 1e-9` ⇒ the trio's fat/MSNF profiles are (near-)linearly dependent.
+ * The fat / MSNF coefficients are each base ingredient's fraction (fat_pct / 100).
+ * `|det| < 1e-9` ⇒ the three ingredients' fat/MSNF profiles are linearly
+ * dependent, so there is no unique solution.
  */
-export function solveBaseDairy(skim: Ingredient, butter: Ingredient, wholeMilk: Ingredient, rhs: Rhs): BaseDairySolve {
+export function solveBase(x: Ingredient, y: Ingredient, z: Ingredient, rhs: Rhs): BaseSolve {
   const a = [
     [1, 1, 1],
-    [skim.fatPct / 100, butter.fatPct / 100, wholeMilk.fatPct / 100],
-    [skim.nonFatSolidsPct / 100, butter.nonFatSolidsPct / 100, wholeMilk.nonFatSolidsPct / 100],
+    [x.fatPct / 100, y.fatPct / 100, z.fatPct / 100],
+    [x.nonFatSolidsPct / 100, y.nonFatSolidsPct / 100, z.nonFatSolidsPct / 100],
   ]
-  const b = [rhs.remainingG, rhs.fatFromDairyG, rhs.msnfFromDairyG]
+  const b = [rhs.remainingWeightG, rhs.remainingFatG, rhs.remainingMsnfG]
 
   const det3 = (m: number[][]) =>
     m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
@@ -43,16 +44,16 @@ export function solveBaseDairy(skim: Ingredient, butter: Ingredient, wholeMilk: 
     m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
 
   const det = det3(a)
-  if (Math.abs(det) < 1e-9) return { ok: false, degenerate: true }
+  if (Math.abs(det) < 1e-9) return { ok: false, reason: 'no_unique_solution' }
 
   const withColumn = (col: number) => a.map((row, r) => row.map((v, c) => (c === col ? b[r] : v)))
 
   return {
     ok: true,
     amounts: {
-      skimPowderG: det3(withColumn(0)) / det,
-      butterG: det3(withColumn(1)) / det,
-      wholeMilkG: det3(withColumn(2)) / det,
+      xG: det3(withColumn(0)) / det,
+      yG: det3(withColumn(1)) / det,
+      zG: det3(withColumn(2)) / det,
     },
   }
 }

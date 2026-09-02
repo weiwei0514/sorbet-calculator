@@ -1,22 +1,22 @@
 'use client'
 
 import type { Ingredient } from '@/lib/calculator/types'
-import type { BaseDairySelection } from '@/lib/gelato/types'
+import type { GelatoInputs } from '@/lib/gelato/types'
 
-const SLOTS: { key: keyof BaseDairySelection; label: string; hint: string }[] = [
-  { key: 'skimPowderId', label: 'X — 脫脂奶粉', hint: '主要提供 MSNF' },
-  { key: 'butterId', label: 'Y — 奶油', hint: '主要提供脂肪' },
-  { key: 'wholeMilkId', label: 'Z — 全脂牛奶', hint: '主要提供水分' },
+const SLOTS: { key: 'baseX' | 'baseY' | 'baseZ'; label: string; hint: string }[] = [
+  { key: 'baseX', label: 'X — 主要基底 1', hint: '例：全脂牛奶（提供水分）' },
+  { key: 'baseY', label: 'Y — 主要基底 2', hint: '例：鮮奶油（提供脂肪）' },
+  { key: 'baseZ', label: 'Z — 主要基底 3', hint: '例：脫脂奶粉（提供 MSNF）' },
 ]
 
-export function BaseDairyPicker({
+export function BaseTriplePicker({
   ingredients,
-  value,
+  inputs,
   onChange,
 }: {
   ingredients: Ingredient[]
-  value: BaseDairySelection
-  onChange: (next: BaseDairySelection) => void
+  inputs: GelatoInputs
+  onChange: (patch: Partial<GelatoInputs>) => void
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -26,8 +26,8 @@ export function BaseDairyPicker({
             {slot.label}
           </span>
           <select
-            value={value[slot.key]}
-            onChange={(e) => onChange({ ...value, [slot.key]: e.target.value })}
+            value={inputs[slot.key]}
+            onChange={(e) => onChange({ [slot.key]: e.target.value })}
             className="border-b bg-transparent pb-1.5 text-base font-medium outline-none"
             style={{ borderColor: 'var(--rule)', color: 'var(--ink)' }}
           >

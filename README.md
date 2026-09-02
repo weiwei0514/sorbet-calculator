@@ -28,9 +28,12 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
 ## 專案結構
 
 - `src/lib/calculator/` — Sorbet 純計算引擎（types / config / validate / engine），與 UI 完全解耦，可獨立測試
-- `src/lib/gelato/` — Gelato 配方平衡引擎：Step 0 區間設定 → Step 1 約束材料 → Step 2 自由材料
-  → 三元一次方程式（`solve3x3.ts`）求基礎乳製品 → 限制條件最佳化（`optimize.ts` 為可替換的 Nelder–Mead）
-  → 全指標驗算。無可行解時回報卡住的指標與最接近可行解。純函式，`__tests__/gelato.test.ts` 覆蓋
+- `src/lib/gelato/` — Gelato 配方平衡引擎（確定性流程，非最佳化）：
+  STEP 0 固定驗收範圍 → STEP 1 目標（總重、Fat%、MSNF%）+ 固定加入（蔗糖/膠體/蛋黃%）
+  → STEP 2 風味／固定食材（固定重量或 %）→ 扣除所有固定食材的重量與成分
+  → `solve3x3.ts` 三元一次方程式求三個主要基底食材 X/Y/Z
+  → STEP 3 重新逐項計算（Fat/MSNF/Other Solids/Total Solids/Sugar/有感糖/POD/PAC）與 STEP 0 驗收（PASS/FAIL）。
+  負重量或無唯一解時回報錯誤，不自行修改使用者目標。純函式，`__tests__/gelato.test.ts` 覆蓋
 - 計算機頁（`/`）上方可切換 SORBET / GELATO（`CalculatorModeSwitch`），選擇記在 localStorage
 - 兩種配方都能「儲存配方」；已儲存配方頁（`/saved`）以 SORBET / GELATO 分頁顯示
   （`saved_recipes.kind` 區分；Gelato 只能在算出可行配方後儲存，AI 風味分析目前仍為 Sorbet 專用）

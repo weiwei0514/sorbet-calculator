@@ -1,47 +1,58 @@
 import type { Ingredient } from '@/lib/calculator/types'
-import type { BaseDairySelection, GelatoTargetRanges, Step1Material } from './types'
+import type { GelatoInputs, MetricRange } from './types'
 
-/** Spec §2 numbers. All editable in the UI. */
-export const DEFAULT_GELATO_RANGES: GelatoTargetRanges = {
+/** STEP 0 — the fixed final-formula acceptance ranges. Not editable anywhere. */
+export const STEP0_RANGES = {
   sugar: { min: 16, max: 22 },
-  fat: { min: 4, max: 18 },
+  fat: { min: 4, max: 12 },
   msnf: { min: 8, max: 12 },
   otherSolids: { min: 0, max: 5 },
+  fatPlusMsnf: { min: 16, max: 22 },
   totalSolids: { min: 32, max: 42 },
-  perceivedSugar: { min: 12, max: 63 },
-  pac: null,
-  custom: { label: '自訂指標', min: 16, max: 22 },
-}
+  perceivedSugar: { min: 16, max: 23 },
+} satisfies Record<string, MetricRange>
 
-/** Name → default [min%, max%] for the Step 1 rows we pre-populate when the
- *  matching ingredient exists in the database. Order matters (display order). */
-const DEFAULT_STEP1_SPEC: { name: string; use: boolean; minPct: number; maxPct: number }[] = [
-  { name: '蔗糖', use: true, minPct: 12, maxPct: 20 },
-  { name: '右旋糖粉', use: false, minPct: 0, maxPct: 4 },
-  { name: '穩定劑', use: true, minPct: 0.3, maxPct: 0.5 },
-  { name: '蛋黃', use: false, minPct: 0, maxPct: 8 },
+export const STEP0_ROWS: { key: keyof typeof STEP0_RANGES; label: string }[] = [
+  { key: 'sugar', label: 'Sugar 糖分' },
+  { key: 'fat', label: 'Fat 脂肪' },
+  { key: 'msnf', label: 'MSNF 無脂固形物' },
+  { key: 'otherSolids', label: 'Other Solids 其他固形物' },
+  { key: 'fatPlusMsnf', label: 'Fat + MSNF 脂肪＋無脂固形物' },
+  { key: 'totalSolids', label: 'Total Solids 固形物總和' },
+  { key: 'perceivedSugar', label: 'Perceived Sugar 有感糖' },
 ]
 
-function findByName(ingredients: Ingredient[], name: string): Ingredient | undefined {
-  return ingredients.find((i) => i.name === name)
-}
-
-/** Pre-populates Step 1 with whichever of the conventional materials exist in the
- *  database. Returns [] when none are found — the user adds rows manually. */
-export function defaultStep1(ingredients: Ingredient[]): Step1Material[] {
-  return DEFAULT_STEP1_SPEC.flatMap((spec) => {
-    const match = findByName(ingredients, spec.name)
-    return match
-      ? [{ ingredientId: match.id, use: spec.use, minPct: spec.minPct, maxPct: spec.maxPct }]
-      : []
-  })
-}
-
-/** Name-matches the three base dairies; falls back to '' (an unset dropdown). */
-export function defaultBaseDairy(ingredients: Ingredient[]): BaseDairySelection {
-  return {
-    skimPowderId: findByName(ingredients, '脫脂奶粉')?.id ?? '',
-    butterId: findByName(ingredients, '奶油')?.id ?? '',
-    wholeMilkId: findByName(ingredients, '全脂牛奶')?.id ?? '',
+function findByName(ingredients: Ingredient[], ...names: string[]): string {
+  for (const n of names) {
+    const hit = ingredients.find((i) => i.name === n)
+    if (hit) return hit.id
   }
+  return ''
+}
+
+/** Sensible starting inputs — name-matches the conventional ingredients where they
+ *  exist, otherwise leaves the dropdown empty for the user to pick. */
+export function defaultGelatoInputs(ingredients: Ingredient[]): GelatoInputs {
+  return {
+    totalWeightG: 1000,
+    fatTargetPct: 8,
+    msnfTargetPct: 10,
+    sucrosePct: 12,
+    stabilizerPct: 0.5,
+    eggYolkPct: 0,
+    sucroseId: findByName(ingredients, '蔗糖', '砂糖'),
+    stabilizerId: findByName(ingredients, '穩定劑', '膠體'),
+    eggYolkId: findByName(ingredients, '蛋黃'),
+    flavourMaterials: [],
+    fixedMaterials: [],
+    baseX: findByName(ingredients, '全脂牛奶'),
+    baseY: findByName(ingredients, '動物性鮮奶油35%', '動物性鮮奶油38%', '鮮奶油', '奶油'),
+    baseZ: findByName(ingredients, '脫脂奶粉'),
+  }
+}
+
+export function checkStep0(actual: number, range: MetricRange): { pass: boolean; overBy: number } {
+  const pass = actual >= range.min - 1e-9 && actual <= range.max + 1e-9
+  const overBy = pass ? 0 : actual < range.min ? range.min - actual : actual - range.max
+  return { pass, overBy }
 }

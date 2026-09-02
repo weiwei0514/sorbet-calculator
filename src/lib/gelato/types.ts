@@ -1,73 +1,46 @@
 import type { Ingredient } from '@/lib/calculator/types'
 
-/** An allowed band [min, max] for a finished-mix metric. */
+/** A fixed acceptance band for a finished-mix metric. STEP 0 — never edited. */
 export interface MetricRange {
   min: number
   max: number
 }
 
-/** The keys of the constrained finished-mix metrics, in display order.
- *  `custom` is a user-nameable placeholder — v1 stores its label/band but does
- *  not compute or validate a value. New metrics (乳糖, 凝固點, cost…) are added
- *  here + in metricsFromTotals + optionally in the solver objective. */
-export type GelatoMetricKey =
-  | 'sugar'
-  | 'fat'
-  | 'msnf'
-  | 'otherSolids'
-  | 'custom'
-  | 'totalSolids'
-  | 'perceivedSugar'
-  | 'pac'
+/** How a STEP 2 material's amount is entered. */
+export type MaterialUnit = 'g' | 'pct'
 
-/** Step 0 — the allowed ranges every finished recipe must satisfy. */
-export interface GelatoTargetRanges {
-  sugar: MetricRange
-  fat: MetricRange
-  msnf: MetricRange
-  otherSolids: MetricRange
-  totalSolids: MetricRange
-  /** 有感糖 — 蔗糖當量 %  = Σ(糖重 × POD係數) ÷ 總重 × 100 */
-  perceivedSugar: MetricRange
-  /** null = not constrained (the metric is still shown, just never marked ✗). */
-  pac: MetricRange | null
-  /** v1: label + band are persisted and displayed; no value is computed. */
-  custom: { label: string; min: number; max: number }
-}
-
-/** Step 1 — a material whose weight the solver may choose within [minPct, maxPct]
- *  of the total weight. `use: false` pins it to 0. */
-export interface Step1Material {
+/** One STEP 2 material (flavour or other fixed) — a fixed weight the solver never
+ *  touches, always counted inside the 100% total. */
+export interface GelatoMaterial {
   ingredientId: string
-  use: boolean
-  minPct: number
-  maxPct: number
-}
-
-/** Step 2 — a material the user adds at a fixed weight the solver never touches. */
-export interface FreeMaterial {
-  ingredientId: string
-  weightG: number
-}
-
-/** The three unknowns of the linear solve: X = 脫脂奶粉, Y = 奶油, Z = 全脂牛奶. */
-export interface BaseDairySelection {
-  skimPowderId: string
-  butterId: string
-  wholeMilkId: string
+  amount: number
+  unit: MaterialUnit
 }
 
 export interface GelatoInputs {
+  /** STEP 1 */
   totalWeightG: number
-  ranges: GelatoTargetRanges
-  step1: Step1Material[]
-  free: FreeMaterial[]
-  baseDairy: BaseDairySelection
+  fatTargetPct: number
+  msnfTargetPct: number
+  sucrosePct: number
+  stabilizerPct: number
+  eggYolkPct: number
+  /** Which database ingredient plays each STEP 1 fixed role. '' for egg yolk = none. */
+  sucroseId: string
+  stabilizerId: string
+  eggYolkId: string
+  /** STEP 2A / STEP 2B — behave identically in the engine, split only for the UI. */
+  flavourMaterials: GelatoMaterial[]
+  fixedMaterials: GelatoMaterial[]
+  /** STEP 2C — the three unknowns of the linear solve. */
+  baseX: string
+  baseY: string
+  baseZ: string
 }
 
-export type GelatoComponentRole = 'step1' | 'free' | 'base'
+export type GelatoComponentRole = 'step1' | 'flavour' | 'fixed' | 'base'
 
-/** One line of the Final Recipe table. */
+/** One line of the STEP 3 final formula table. */
 export interface GelatoComponent {
   ingredientId: string
   name: string
@@ -76,38 +49,42 @@ export interface GelatoComponent {
   pctOfTotal: number
 }
 
-/** One line of the Analysis panel. `range: null` ⇒ shown but never ✗.
- *  `value: null` ⇒ not computed in v1 (the custom row). */
+/** One line of the STEP 3 analysis block. */
 export interface GelatoMetric {
-  key: GelatoMetricKey
+  key: string
   label: string
-  value: number | null
-  range: MetricRange | null
-  inRange: boolean
+  /** Percent of the finished mix (or a raw POD/PAC gram total when unit === '' ). */
+  value: number
+  unit: '%' | ''
+}
+
+/** One row of the STEP 0 GELATO FORMULA CHECK. */
+export interface Step0Check {
+  key: string
+  label: string
+  actual: number
+  range: MetricRange
+  pass: boolean
+  /** 0 when pass; otherwise how far outside the band (absolute %). */
+  overBy: number
 }
 
 export interface GelatoRecipeSnapshot {
   components: GelatoComponent[]
   totalWeightG: number
   metrics: GelatoMetric[]
-  /** Raw aggregates for display (per whole batch). */
+  step0: Step0Check[]
+  overallPass: boolean
   podTotal: number
   pacTotal: number
-  waterPct: number
-}
-
-export interface GelatoViolation {
-  key: GelatoMetricKey
-  label: string
-  achieved: number
-  range: MetricRange
-  direction: '偏高' | '偏低'
+  /** The solved base-dairy weights, for display. */
+  base: { xG: number; yG: number; zG: number }
+  /** Intermediate values (STEP 2-2 .. 2-4) surfaced for transparency. */
+  remaining: { weightG: number; fatG: number; msnfG: number }
 }
 
 export type GelatoResult =
   | { ok: true; recipe: GelatoRecipeSnapshot }
-  | { ok: false; reason: 'infeasible'; violations: GelatoViolation[]; closest: GelatoRecipeSnapshot; hint: string }
-  | { ok: false; reason: 'error'; message: string }
+  | { ok: false; reason: 'error'; message: string; detail?: string }
 
-/** Convenience alias for the resolved-ingredient lookup passed into the engine. */
 export type IngredientsById = Map<string, Ingredient>

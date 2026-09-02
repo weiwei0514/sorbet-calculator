@@ -1,36 +1,24 @@
 'use client'
 
 import type { SavedGelatoRecipe } from '@/lib/calculator/types'
-import { GelatoAnalysis, GelatoRecipeTable } from '@/components/gelato/GelatoResultView'
+import { GelatoAnalysis, GelatoFormulaCheck, GelatoRecipeTable } from '@/components/gelato/GelatoResultView'
 import { Button } from '@/components/ui/Button'
 import { Chevron, NoteEditor, fmt, formatDate } from './shared'
 
-function StepRangeSummary({ recipe }: { recipe: SavedGelatoRecipe }) {
-  const r = recipe.inputs.ranges
-  const rows: [string, number, number][] = [
-    ['Sugar', r.sugar.min, r.sugar.max],
-    ['Fat', r.fat.min, r.fat.max],
-    ['MSNF', r.msnf.min, r.msnf.max],
-    ['Other Solids', r.otherSolids.min, r.otherSolids.max],
-    ['Total Solids', r.totalSolids.min, r.totalSolids.max],
-    ['有感糖', r.perceivedSugar.min, r.perceivedSugar.max],
-  ]
+function TargetsSummary({ recipe }: { recipe: SavedGelatoRecipe }) {
+  const i = recipe.inputs
   return (
     <div className="flex flex-col gap-2">
       <span className="font-mono-label text-[10px]" style={{ color: 'var(--faint)' }}>
-        Step 0 · 儲存時的允許範圍
+        STEP 1 · 儲存時的目標
       </span>
-      <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs" style={{ color: 'var(--muted)' }}>
-        {rows.map(([label, lo, hi]) => (
-          <span key={label} className="tabular">
-            {label} {lo}–{hi}%
-          </span>
-        ))}
-        {r.pac && (
-          <span className="tabular">
-            PAC {r.pac.min}–{r.pac.max}
-          </span>
-        )}
+      <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs tabular" style={{ color: 'var(--muted)' }}>
+        <span>Total {fmt(i.totalWeightG, 0)} g</span>
+        <span>Fat {i.fatTargetPct}%</span>
+        <span>MSNF {i.msnfTargetPct}%</span>
+        <span>Sucrose {i.sucrosePct}%</span>
+        <span>Stabilizer {i.stabilizerPct}%</span>
+        {i.eggYolkPct > 0 && <span>Egg Yolk {i.eggYolkPct}%</span>}
       </div>
     </div>
   )
@@ -50,7 +38,8 @@ export function SavedGelatoCard({
   onNoteSaved: (note: string) => void
 }) {
   const snap = recipe.result
-  const anyOut = snap.metrics.some((m) => m.range != null && !m.inRange)
+  const fat = snap.metrics.find((m) => m.key === 'fat')?.value ?? 0
+  const totalSolids = snap.metrics.find((m) => m.key === 'totalSolids')?.value ?? 0
 
   return (
     <li
@@ -71,10 +60,12 @@ export function SavedGelatoCard({
           {formatDate(recipe.createdAt)}
         </span>
         <span className="tabular text-sm" style={{ color: 'var(--muted)' }}>
-          {fmt(snap.totalWeightG, 0)}g ・ 總固形物{' '}
-          {fmt(snap.metrics.find((m) => m.key === 'totalSolids')?.value ?? 0)}% ・ 脂肪{' '}
-          {fmt(snap.metrics.find((m) => m.key === 'fat')?.value ?? 0)}%
-          {anyOut && <span style={{ color: 'var(--danger)' }}> ・ 有指標超出範圍</span>}
+          {fmt(snap.totalWeightG, 0)}g ・ 脂肪 {fmt(fat)}% ・ 固形物 {fmt(totalSolids)}%
+          {snap.overallPass ? (
+            <span style={{ color: 'var(--ok)' }}> ・ ✅ PASS</span>
+          ) : (
+            <span style={{ color: 'var(--danger)' }}> ・ ❌ FAIL</span>
+          )}
         </span>
         {recipe.note && !expanded && (
           <span className="font-display line-clamp-2 text-sm italic" style={{ color: 'var(--faint)' }}>
@@ -86,14 +77,15 @@ export function SavedGelatoCard({
       {expanded && (
         <div className="flex flex-col gap-10 border-t px-5 pt-8 pb-6" style={{ borderColor: 'var(--rule)' }}>
           <NoteEditor recipeId={recipe.id} note={recipe.note} onSaved={onNoteSaved} />
+          <TargetsSummary recipe={recipe} />
           <GelatoRecipeTable recipe={snap} />
           <div>
             <p className="font-mono-label mb-4 text-[10px]" style={{ color: 'var(--faint)' }}>
-              Analysis · 配方分析
+              Ingredient Analysis · 配方完整分析
             </p>
             <GelatoAnalysis recipe={snap} />
           </div>
-          <StepRangeSummary recipe={recipe} />
+          <GelatoFormulaCheck recipe={snap} />
           <div>
             <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={onDelete}>
               刪除此配方
