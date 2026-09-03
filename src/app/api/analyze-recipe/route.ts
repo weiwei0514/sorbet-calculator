@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
-import type { RecipeAiAnalysis, SavedSorbetRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
 import { recipeAiAnalysisSchema } from '@/lib/aiAnalysis/schema'
 import { RECIPE_ANALYSIS_SYSTEM, buildRecipeAnalysisPrompt } from '@/lib/aiAnalysis/buildPrompt'
+import { GELATO_ANALYSIS_SYSTEM, buildGelatoAnalysisPrompt } from '@/lib/aiAnalysis/buildGelatoPrompt'
 import { createClient } from '@/lib/supabase/server'
 import { saveRecipeAiAnalysis } from '@/lib/savedRecipes/mutations'
 
@@ -13,7 +14,7 @@ const MODEL = 'claude-opus-5'
 interface AnalyzeRequestBody {
   /** Saved-recipe id — when present the result is also cached onto the row. */
   id?: string
-  recipe?: SavedSorbetRecipe
+  recipe?: SavedRecipe
 }
 
 export async function POST(request: Request) {
@@ -33,18 +34,22 @@ export async function POST(request: Request) {
     return Response.json({ error: '缺少配方資料。' }, { status: 400 })
   }
 
+  const isGelato = recipe.kind === 'gelato'
+  const system = isGelato ? GELATO_ANALYSIS_SYSTEM : RECIPE_ANALYSIS_SYSTEM
+  const userPrompt = isGelato ? buildGelatoAnalysisPrompt(recipe) : buildRecipeAnalysisPrompt(recipe)
+
   let fields: RecipeAiAnalysis | null = null
   try {
     const client = new Anthropic()
     const response = await client.messages.parse({
       model: MODEL,
       max_tokens: 4000,
-      system: RECIPE_ANALYSIS_SYSTEM,
+      system,
       output_config: {
         effort: 'medium',
         format: zodOutputFormat(recipeAiAnalysisSchema),
       },
-      messages: [{ role: 'user', content: buildRecipeAnalysisPrompt(recipe) }],
+      messages: [{ role: 'user', content: userPrompt }],
     })
     const parsed = response.parsed_output
     if (!parsed) {

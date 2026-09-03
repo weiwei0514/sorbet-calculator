@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { RecipeAiAnalysis as Analysis, SavedSorbetRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis as Analysis, SavedRecipe } from '@/lib/calculator/types'
 import { MAX_CHAT_MESSAGE_CHARS, type AnalysisChatTurn } from '@/lib/aiAnalysis/chat'
 import { Button } from '@/components/ui/Button'
 
@@ -49,7 +49,7 @@ function FollowUpChat({
   initialTurns,
   onConversation,
 }: {
-  recipe: SavedSorbetRecipe
+  recipe: SavedRecipe
   analysis: Analysis
   initialTurns: AnalysisChatTurn[]
   onConversation: (turns: AnalysisChatTurn[]) => void
@@ -162,7 +162,7 @@ export function RecipeAiAnalysisPanel({
   recipe,
   onAnalyzed,
 }: {
-  recipe: SavedSorbetRecipe
+  recipe: SavedRecipe
   onAnalyzed: (analysis: Analysis) => void
 }) {
   const [analysis, setAnalysis] = useState<Analysis | null>(recipe.aiAnalysis)

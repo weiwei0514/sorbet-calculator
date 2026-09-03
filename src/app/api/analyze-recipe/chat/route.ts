@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { RecipeAiAnalysis, SavedSorbetRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, SavedRecipe } from '@/lib/calculator/types'
 import { RECIPE_ANALYSIS_SYSTEM, buildRecipeAnalysisPrompt } from '@/lib/aiAnalysis/buildPrompt'
+import { GELATO_ANALYSIS_SYSTEM, buildGelatoAnalysisPrompt } from '@/lib/aiAnalysis/buildGelatoPrompt'
 import { formatAnalysisAsText } from '@/lib/aiAnalysis/formatAnalysis'
 import { MAX_CHAT_MESSAGE_CHARS, MAX_CHAT_TURNS, type AnalysisChatTurn } from '@/lib/aiAnalysis/chat'
 import { createClient } from '@/lib/supabase/server'
@@ -10,9 +11,9 @@ export const maxDuration = 120
 
 const MODEL = 'claude-opus-5'
 
-const CHAT_SYSTEM = `${RECIPE_ANALYSIS_SYSTEM}
+const FOLLOW_UP_RULES = `
 
-使用者已經看過你針對這份 sorbet 配方做的完整分析，現在要針對分析結果追問。
+使用者已經看過你針對這份配方做的完整分析，現在要針對分析結果追問。
 - 直接回答問題，繁體中文，語氣與先前一致
 - 可以引用配方數字與先前分析的內容，但不要每次都重講整份分析
 - 需要時給具體做法（加減哪個原料、大概多少）
@@ -20,8 +21,11 @@ const CHAT_SYSTEM = `${RECIPE_ANALYSIS_SYSTEM}
 - 回答精簡，聚焦在被問到的點；除非使用者要求，否則控制在約 250 字內
 - 以純文字回答，不要使用 Markdown 語法（不要 #、**、表格）；要列點時每點以「・」開頭`
 
+const SORBET_CHAT_SYSTEM = `${RECIPE_ANALYSIS_SYSTEM}${FOLLOW_UP_RULES}`
+const GELATO_CHAT_SYSTEM = `${GELATO_ANALYSIS_SYSTEM}${FOLLOW_UP_RULES}`
+
 interface ChatRequestBody {
-  recipe?: SavedSorbetRecipe
+  recipe?: SavedRecipe
   analysis?: RecipeAiAnalysis
   history?: AnalysisChatTurn[]
 }
@@ -63,8 +67,10 @@ export async function POST(request: Request) {
     return Response.json({ error: '最後一則訊息必須是使用者提問。' }, { status: 400 })
   }
 
+  const isGelato = recipe.kind === 'gelato'
+  const recipePrompt = isGelato ? buildGelatoAnalysisPrompt(recipe) : buildRecipeAnalysisPrompt(recipe)
   const messages = [
-    { role: 'user' as const, content: `${buildRecipeAnalysisPrompt(recipe)}\n\n---\n請針對這份配方做完整分析。` },
+    { role: 'user' as const, content: `${recipePrompt}\n\n---\n請針對這份配方做完整分析。` },
     { role: 'assistant' as const, content: formatAnalysisAsText(analysis) },
     ...history.map((t) => ({ role: t.role, content: t.content })),
   ]
@@ -74,7 +80,7 @@ export async function POST(request: Request) {
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: 1200,
-      system: CHAT_SYSTEM,
+      system: isGelato ? GELATO_CHAT_SYSTEM : SORBET_CHAT_SYSTEM,
       output_config: { effort: 'low' },
       messages,
     })

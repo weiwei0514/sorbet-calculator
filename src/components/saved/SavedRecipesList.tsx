@@ -110,6 +110,7 @@ export function SavedRecipesList({ initialRecipes }: { initialRecipes: SavedReci
                 onToggle={() => toggleExpanded(recipe.id)}
                 onDelete={() => setPendingDelete(recipe)}
                 onNoteSaved={(note) => handleNoteSaved(recipe.id, note)}
+                onAnalyzed={(analysis) => handleAnalyzed(recipe.id, analysis)}
               />
             ) : (
               <SavedSorbetCard

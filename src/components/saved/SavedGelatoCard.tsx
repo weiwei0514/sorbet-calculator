@@ -1,6 +1,6 @@
 'use client'
 
-import type { SavedGelatoRecipe } from '@/lib/calculator/types'
+import type { RecipeAiAnalysis, SavedGelatoRecipe } from '@/lib/calculator/types'
 import {
   GelatoBreakdownTable,
   GelatoCompositionBar,
@@ -8,6 +8,7 @@ import {
   GelatoPodPacSummary,
   GelatoRecipeTable,
 } from '@/components/gelato/GelatoResultView'
+import { RecipeAiAnalysisPanel } from '@/components/saved/RecipeAiAnalysis'
 import { Button } from '@/components/ui/Button'
 import { Chevron, NoteEditor, fmt, formatDate } from './shared'
 
@@ -36,12 +37,14 @@ export function SavedGelatoCard({
   onToggle,
   onDelete,
   onNoteSaved,
+  onAnalyzed,
 }: {
   recipe: SavedGelatoRecipe
   expanded: boolean
   onToggle: () => void
   onDelete: () => void
   onNoteSaved: (note: string) => void
+  onAnalyzed: (analysis: RecipeAiAnalysis) => void
 }) {
   const snap = recipe.result
   const totalSolids = snap.breakdown.totalSolidsPct
@@ -97,6 +100,9 @@ export function SavedGelatoCard({
               Contribution Breakdown · 逐項貢獻與計算過程
             </p>
             <GelatoContributionTable recipe={snap} />
+          </div>
+          <div className="border-t pt-8" style={{ borderColor: 'var(--rule)' }}>
+            <RecipeAiAnalysisPanel recipe={recipe} onAnalyzed={onAnalyzed} />
           </div>
           <div>
             <Button variant="ghost" style={{ color: 'var(--danger)' }} onClick={onDelete}>

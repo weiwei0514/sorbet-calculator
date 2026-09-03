@@ -38,8 +38,9 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4 + Supabase（食材資料庫
 - 兩種配方都能「儲存配方」；已儲存配方頁（`/saved`）以 SORBET / GELATO 分頁顯示
   （`saved_recipes.kind` 區分；Gelato 只能在算出可行配方後儲存，AI 風味分析目前仍為 Sorbet 專用）
 - `src/lib/ingredients/` — 食材資料庫的查詢與寫入（透過 Supabase）
-- `src/lib/aiAnalysis/` — AI 風味分析的 prompt 組裝與輸出 schema
-- `src/app/api/analyze-recipe/` — 呼叫 Claude（`claude-opus-5`）分析已儲存配方的 route handler，結果快取回 `saved_recipes.ai_analysis`
+- `src/lib/aiAnalysis/` — AI 風味分析的 prompt 組裝（Sorbet／Gelato 各一）與共用輸出 schema
+- `src/app/api/analyze-recipe/`（含 `chat/`）— 呼叫 Claude（`claude-opus-5`）分析已儲存配方並支援後續追問，
+  依 `recipe.kind` 切換 Sorbet／Gelato prompt，結果與對話快取回 `saved_recipes.ai_analysis`
 - `src/lib/supabase/` — Supabase client（browser）與 server client
 - `src/components/calculator/` — 配方設定、自動計算配方、配方分析、錯誤訊息等 UI
 - `src/components/ingredients/` — 食材資料庫的新增/修改/刪除/搜尋 UI
