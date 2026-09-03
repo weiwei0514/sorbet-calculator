@@ -1,5 +1,6 @@
 import type { Ingredient } from '@/lib/calculator/types'
 import { accumulate, type WeightedIngredient } from './nutrition'
+import { podPacBasisG } from './podpac'
 import { solveBase } from './solve3x3'
 import type {
   GelatoComponent,
@@ -133,6 +134,7 @@ export function calculateGelato(inputs: GelatoInputs, byId: IngredientsById): Ge
   }
   const components: GelatoComponent[] = [...merged.values()].map(({ ingredient, role, weightG }) => {
     const sugarG = weightG * (ingredient.sugarPct / 100)
+    const basisG = podPacBasisG(ingredient, weightG)
     return {
       ingredientId: ingredient.id,
       name: ingredient.name,
@@ -140,10 +142,11 @@ export function calculateGelato(inputs: GelatoInputs, byId: IngredientsById): Ge
       weightG,
       pctOfTotal: (weightG / W) * 100,
       sugarG,
+      podPacBasisG: basisG,
       podCoefficient: ingredient.podCoefficient,
       pacCoefficient: ingredient.pacCoefficient,
-      podContributionG: sugarG * (ingredient.podCoefficient ?? 0),
-      pacContributionG: sugarG * (ingredient.pacCoefficient ?? 0),
+      podContributionG: basisG * (ingredient.podCoefficient ?? 0),
+      pacContributionG: basisG * (ingredient.pacCoefficient ?? 0),
     }
   })
 

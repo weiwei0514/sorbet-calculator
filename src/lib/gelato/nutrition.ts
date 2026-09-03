@@ -1,12 +1,14 @@
 import type { Ingredient } from '@/lib/calculator/types'
+import { podPacBasisG } from './podpac'
 
 export interface WeightedIngredient {
   ingredient: Ingredient
   weightG: number
 }
 
-/** Absolute grams of each component. podG/pacG follow the Sorbet convention:
- *  糖重(g) × 係數 (係數 null ⇒ 0). No per-sugar-type split in v1. */
+/** Absolute grams of each component. podG/pacG = basis(g) × 係數 (係數 null ⇒ 0),
+ *  where basis is sugar grams for most ingredients but a fixed weight fraction
+ *  for milk / skim-milk-powder / cream — see podpac.ts. */
 export interface Totals {
   weightG: number
   fatG: number
@@ -46,8 +48,8 @@ export function accumulate(entries: WeightedIngredient[]): Totals {
       otherSolidsG: acc.otherSolidsG + otherSolidsG,
       waterG: acc.waterG + waterG,
       totalSolidsG: acc.totalSolidsG + sugarG + fatG + msnfG + otherSolidsG,
-      podG: acc.podG + sugarG * (ingredient.podCoefficient ?? 0),
-      pacG: acc.pacG + sugarG * (ingredient.pacCoefficient ?? 0),
+      podG: acc.podG + podPacBasisG(ingredient, weightG) * (ingredient.podCoefficient ?? 0),
+      pacG: acc.pacG + podPacBasisG(ingredient, weightG) * (ingredient.pacCoefficient ?? 0),
     }
   }, { ...ZERO_TOTALS })
 }

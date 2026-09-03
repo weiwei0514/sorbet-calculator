@@ -34,7 +34,8 @@ export function GelatoCalculator({
     () => new Map(initialIngredients.map((i) => [i.id, i])),
     [initialIngredients]
   )
-  // Flavour/fixed dropdowns exclude the fruit rows (those are the Sorbet flow).
+  // STEP 1 dropdowns, STEP 2B and the base-triple picker exclude the fruit rows
+  // (those belong to the Sorbet flow). STEP 2A flavour materials use the whole DB.
   const materialOptions = useMemo(
     () => initialIngredients.filter((i) => i.category !== 'fruit'),
     [initialIngredients]
@@ -83,7 +84,7 @@ export function GelatoCalculator({
 
       <Section eyebrow="STEP 2A · Flavour Materials" title="風味食材（固定加入，計入 100%）">
         <MaterialList
-          ingredients={materialOptions}
+          ingredients={initialIngredients}
           rows={inputs.flavourMaterials}
           onChange={(flavourMaterials) => patch({ flavourMaterials })}
           addLabel="＋新增風味食材"

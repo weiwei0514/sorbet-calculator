@@ -97,6 +97,35 @@ describe('calculateGelato — deterministic pipeline', () => {
     expect(pPist).toBeCloseTo(100, 6)
   })
 
+  it('computes milk / skim-powder / cream POD·PAC from a fixed weight fraction, not sugar %', () => {
+    const r = calculateGelato(inputs(), BY_ID)
+    if (!r.ok) throw new Error('expected ok')
+    const milk = r.recipe.components.find((c) => c.name === '全脂牛奶')!
+    const smp = r.recipe.components.find((c) => c.name === '脫脂奶粉')!
+    const cr = r.recipe.components.find((c) => c.name === '動物性鮮奶油35%')!
+
+    // sugar % is 0 for all three, but the fixed-fraction basis is not.
+    expect(milk.podPacBasisG).toBeCloseTo(milk.weightG * 0.048, 6)
+    expect(smp.podPacBasisG).toBeCloseTo(smp.weightG * 0.97, 6)
+    expect(cr.podPacBasisG).toBeCloseTo(cr.weightG * 0.028, 6)
+
+    expect(milk.podContributionG).toBeCloseTo(milk.weightG * 0.048 * milk.podCoefficient!, 6)
+    expect(smp.pacContributionG).toBeCloseTo(smp.weightG * 0.97 * smp.pacCoefficient!, 6)
+
+    // A non-dairy still uses sugar grams.
+    const sucrose = r.recipe.components.find((c) => c.name === '蔗糖')!
+    expect(sucrose.podPacBasisG).toBeCloseTo(sucrose.sugarG, 6)
+  })
+
+  it('does not treat 牛奶巧克力 as a dairy base (name ends with 巧克力)', () => {
+    const milkChoc = ing({ id: 'mc', name: '牛奶巧克力', waterPct: 1, sugarPct: 50, fatPct: 35, nonFatSolidsPct: 5, otherSolidsPct: 9, podCoefficient: 0.5, pacCoefficient: 0.5 })
+    const byId: IngredientsById = new Map([...BASE_LIST, milkChoc].map((i) => [i.id, i]))
+    const r = calculateGelato(inputs({ flavourMaterials: [{ ingredientId: 'mc', amount: 60, unit: 'g' }] }), byId)
+    if (!r.ok) throw new Error('expected ok')
+    const mc = r.recipe.components.find((c) => c.name === '牛奶巧克力')!
+    expect(mc.podPacBasisG).toBeCloseTo(mc.sugarG, 6) // 60 g × 50% = 30 g sugar basis
+  })
+
   it('re-solves after adding an egg yolk fraction', () => {
     const r = calculateGelato(inputs({ eggYolkPct: 5, eggYolkId: 'yolk' }), BY_ID)
     expect(r.ok).toBe(true)

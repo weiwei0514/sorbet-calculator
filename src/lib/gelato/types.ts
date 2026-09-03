@@ -49,10 +49,13 @@ export interface GelatoComponent {
   pctOfTotal: number
   /** Grams of sugar this component brings in. */
   sugarG: number
+  /** Grams the POD/PAC coefficients multiply against — sugarG for most
+   *  ingredients, a fixed weight fraction for 牛奶 / 脫脂奶粉 / 動物性鮮奶油. */
+  podPacBasisG: number
   /** null when the ingredient has no coefficient set (counted as 0 in the totals). */
   podCoefficient: number | null
   pacCoefficient: number | null
-  /** sugarG × (coefficient ?? 0) */
+  /** podPacBasisG × (coefficient ?? 0) */
   podContributionG: number
   pacContributionG: number
 }

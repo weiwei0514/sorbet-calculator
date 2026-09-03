@@ -70,7 +70,9 @@ export function GelatoContributionTable({ recipe }: { recipe: GelatoRecipeSnapsh
       </THead>
       <TBody>
         {rows.map((c) => {
-          const sugarFraction = c.weightG > 0 ? c.sugarG / c.weightG : 0
+          // Basis fraction shown in the working: sugar-fraction for most, the
+          // fixed lactose-ish fraction for 牛奶 / 脫脂奶粉 / 動物性鮮奶油.
+          const basisFraction = c.weightG > 0 ? c.podPacBasisG / c.weightG : 0
           return (
             <TR key={`${c.role}-${c.ingredientId}`}>
               <TD>{c.name}</TD>
@@ -83,7 +85,7 @@ export function GelatoContributionTable({ recipe }: { recipe: GelatoRecipeSnapsh
                   <div>
                     <div className="tabular">{fmt(c.podContributionG)}</div>
                     <div className="text-xs" style={{ color: 'var(--faint)' }}>
-                      {fmt(c.weightG, 0)} × {fmt(sugarFraction, 2)} × {fmt(c.podCoefficient, 2)}
+                      {fmt(c.weightG, 0)} × {fmt(basisFraction, 3)} × {fmt(c.podCoefficient, 2)}
                     </div>
                   </div>
                 )}
@@ -95,7 +97,7 @@ export function GelatoContributionTable({ recipe }: { recipe: GelatoRecipeSnapsh
                   <div>
                     <div className="tabular">{fmt(c.pacContributionG)}</div>
                     <div className="text-xs" style={{ color: 'var(--faint)' }}>
-                      {fmt(c.weightG, 0)} × {fmt(sugarFraction, 2)} × {fmt(c.pacCoefficient, 2)}
+                      {fmt(c.weightG, 0)} × {fmt(basisFraction, 3)} × {fmt(c.pacCoefficient, 2)}
                     </div>
                   </div>
                 )}
